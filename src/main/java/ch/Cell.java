@@ -5,6 +5,7 @@ import java.util.HashMap;
 public class Cell {
     private int row;
     private int col;
+    private int id;
     private Integer value;
     private Boolean showValue;
     private Boolean isInside;
@@ -15,6 +16,7 @@ public class Cell {
     public Cell(int row, int col) {
         this.row = row;
         this.col = col;
+        id = row + col;
         value = null;
         showValue = true;
         isInside = false;
@@ -28,6 +30,14 @@ public class Cell {
         result.put("right", null);
         result.put("bottom", null);
         result.put("left", null);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getRow() {
@@ -115,5 +125,13 @@ public class Cell {
         }else {
             boarders.put(boarder, value);
         }
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        Cell cloned = (Cell) super.clone();
+        cloned.boarders = new HashMap<>(this.boarders);
+        cloned.result = new HashMap<>(this.result);
+        return cloned;
     }
 }
