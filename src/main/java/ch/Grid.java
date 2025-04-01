@@ -1,5 +1,6 @@
 package ch;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 //TODO maby change 2d to 1d array
@@ -87,9 +88,9 @@ public class Grid {
         var solver = 0;
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
-            var myList =  copiedGrid.removeNumber(solver, removeAmount);
-            if ((Boolean) myList.get(0)) {
-                for (Cell copiedCell : (ArrayList<Cell>) myList.get(1)){
+            ArrayList<Cell> numbersToRemove =  copiedGrid.removeNumber(solver, removeAmount);
+            if (!numbersToRemove.isEmpty()) {
+                for (Cell copiedCell : numbersToRemove){
                     Cell cell = cells.get(copiedCell.getId());
                     cell.setShowValue(false);
                 }
@@ -103,9 +104,8 @@ public class Grid {
 
     }
 
-    public ArrayList<Object> removeNumber(Solver solver, int removeAmount){
+    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount){
         boolean fastRemove = false;
-        var myResult = new ArrayList<Object>();
 
 
         if (removeAmount > Settings.removeAmount - Settings.fastRemoveAmount) {
@@ -113,9 +113,7 @@ public class Grid {
         }
 
         if (removedCells.size() <= 0) {
-            myResult.add(0, true);
-            myResult.add(1, removedCells);
-            return myResult;
+            return removedCells;
         }
 
         Cell randomNumberedCell = null; // get random numerd cell
@@ -125,19 +123,15 @@ public class Grid {
         removedCells.add(randomNumberedCell);
 
         if (fastRemove || solver.hasSingleSolution()){
-            if (!removeNumber(solver, removeAmount--).isEmpty()){
-                myResult.add(0, true);
-                myResult.add(1, removedCells);
-                return myResult;
+            if (!removeNumber(solver, removeAmount-1).isEmpty()){
+                return removedCells;
             }
         }
 
         removedCells.remove(randomNumberedCell);
         randomNumberedCell.setValue(number);
         randomNumberedCell.setShowValue(true);
-        myResult.add(0, false);
-        myResult.add(1, removedCells);
-        return myResult;
+        return removedCells;
 
     }
 
@@ -331,6 +325,12 @@ public class Grid {
         return null;
     }
 
+    public void setCellsUnidentified(){
+        for (Cell cell : cells) {
+            cell.setInside(null);
+        }
+    }
+
     @Override
     protected Grid clone() throws CloneNotSupportedException {
         Grid grid = new Grid();
@@ -349,5 +349,35 @@ public class Grid {
         return grid;
     }
 
+    public Stack<Action> getActionStack() {
+        return actionStack;
+    }
 
+    public void setActionStack(Stack<Action> actionStack) {
+        this.actionStack = actionStack;
+    }
+
+    public ArrayList<Cell> getRemovedCells() {
+        return removedCells;
+    }
+
+    public void setRemovedCells(ArrayList<Cell> removedCells) {
+        this.removedCells = removedCells;
+    }
+
+    public ArrayList<Cell> getInsideCells() {
+        return insideCells;
+    }
+
+    public void setInsideCells(ArrayList<Cell> insideCells) {
+        this.insideCells = insideCells;
+    }
+
+    public ArrayList<Cell> getCells() {
+        return cells;
+    }
+
+    public void setCells(ArrayList<Cell> cells) {
+        this.cells = cells;
+    }
 }
