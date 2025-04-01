@@ -124,7 +124,13 @@ public class Solver {
         }
 
         if (cell.getInside() != null) {
-
+            changed = true;
+            colorAdjacentCells(cell, cell.getInside());
+            for (Cell adjacentCell : adjacentCells) { //todo move to 3 patterns
+                if (adjacentCell.getValue() == 3) {
+                    colorAdjacentCells(adjacentCell, switchColor(adjacentCell.isInside));
+                }
+            }
         }
         return changed;
     }
@@ -144,5 +150,9 @@ public class Solver {
         return changed;
     }
 
-
+    private void colorAdjacentCells(Cell cell, boolean isInside) {
+        for (Cell adjacentCell : grid.getAdjacentCells(cell, Settings.directions)){
+            adjacentCell.setInside(isInside);
+        }
+    }
 }

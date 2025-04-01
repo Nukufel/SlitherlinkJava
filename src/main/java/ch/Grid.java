@@ -3,7 +3,6 @@ package ch;
 import java.lang.reflect.Array;
 import java.util.*;
 
-//TODO maby change 2d to 1d array
 public class Grid {
     private Stack<Action> actionStack = new Stack<>();
     private ArrayList<Cell> cells = new ArrayList<>();
