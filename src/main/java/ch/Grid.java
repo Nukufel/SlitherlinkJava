@@ -84,7 +84,7 @@ public class Grid {
         boolean isDone = false;
         int removeAmount = Settings.removeAmount;
         Grid copiedGrid = this.clone();
-        var solver = 0;
+        var solver = new Solver(copiedGrid, this);
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
             ArrayList<Cell> numbersToRemove =  copiedGrid.removeNumber(solver, removeAmount);
