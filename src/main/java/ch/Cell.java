@@ -1,5 +1,6 @@
 package ch;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Cell {
@@ -8,23 +9,21 @@ public class Cell {
     private int id;
     private Integer value;
     private Boolean showValue;
-    private Boolean isInside;
 
-    private HashMap<String, Boolean> boarders = new HashMap<>();
+    private HashMap<String, Boarder> boarders = new HashMap<>();
     private HashMap<String, Boolean> result = new HashMap<>();
 
-    public Cell(int row, int col) {
+    public Cell(int row, int col, ArrayList<Boarder> boarders) {
         this.row = row;
         this.col = col;
         id = row + col;
         value = null;
         showValue = true;
-        isInside = false;
 
-        boarders.put("top", null);
-        boarders.put("right", null);
-        boarders.put("bottom", null);
-        boarders.put("left", null);
+        this.boarders.put("top", boarders.get(0));
+        this.boarders.put("right", boarders.get(1));
+        this.boarders.put("bottom", boarders.get(2));
+        this.boarders.put("left", boarders.get(3));
 
         result.put("top", null);
         result.put("right", null);
@@ -56,20 +55,12 @@ public class Cell {
         this.result = result;
     }
 
-    public HashMap<String, Boolean> getBoarders() {
+    public HashMap<String, Boarder> getBoarders() {
         return boarders;
     }
 
-    public void setBoarders(HashMap<String, Boolean> boarders) {
+    public void setBoarders(HashMap<String, Boarder> boarders) {
         this.boarders = boarders;
-    }
-
-    public Boolean getInside() {
-        return isInside;
-    }
-
-    public void setInside(Boolean inside) {
-        isInside = inside;
     }
 
     public Boolean getShowValue() {
@@ -98,8 +89,8 @@ public class Cell {
 
     public void calcValue(){
         var count = 0;
-        for (var value : boarders.values()) {
-            if (value) {
+        for (var boarder : boarders.values()) {
+            if (boarder.getState() == MyBoolean.TRUE) {
                 count++;
             }
         }
