@@ -7,29 +7,20 @@ public class Cell {
     private int row;
     private int col;
     private int id;
+    private MyBoolean isInside;
     private Integer value;
     private Boolean showValue;
 
-    private HashMap<String, Boarder> boarders = new HashMap<>();
-    private HashMap<String, Boolean> result = new HashMap<>();
+    private HashMap<Location, Boarder> boarders = new HashMap<>();
 
-    public Cell(int row, int col, ArrayList<Boarder> boarders) {
+    public Cell(int row, int col) {
         this.row = row;
         this.col = col;
         id = row + col;
         value = null;
         showValue = true;
-
-        this.boarders.put("top", boarders.get(0));
-        this.boarders.put("right", boarders.get(1));
-        this.boarders.put("bottom", boarders.get(2));
-        this.boarders.put("left", boarders.get(3));
-
-        result.put("top", null);
-        result.put("right", null);
-        result.put("bottom", null);
-        result.put("left", null);
     }
+
 
     public int getId() {
         return id;
@@ -47,19 +38,19 @@ public class Cell {
         this.row = row;
     }
 
-    public HashMap<String, Boolean> getResult() {
-        return result;
+    public MyBoolean getIsInside() {
+        return isInside;
     }
 
-    public void setResult(HashMap<String, Boolean> result) {
-        this.result = result;
+    public void setIsInside(MyBoolean isInside) {
+        this.isInside = isInside;
     }
 
-    public HashMap<String, Boarder> getBoarders() {
+    public ArrayList<Boarder> getBoarders() {
         return boarders;
     }
 
-    public void setBoarders(HashMap<String, Boarder> boarders) {
+    public void setBoarders(ArrayList<Boarder> boarders) {
         this.boarders = boarders;
     }
 
@@ -87,9 +78,13 @@ public class Cell {
         this.col = col;
     }
 
+    public boolean hasBoarder() {
+        return !boarders.isEmpty();
+    }
+
     public void calcValue(){
         var count = 0;
-        for (var boarder : boarders.values()) {
+        for (var boarder : boarders) {
             if (boarder.getState() == MyBoolean.TRUE) {
                 count++;
             }
@@ -97,32 +92,19 @@ public class Cell {
         value = count;
     }
 
-    public boolean isCorrect(){
-        var setBoarders = boarders.entrySet().stream().filter(e -> e.getValue());
-        var correctBoarders = result.entrySet().stream().filter(e -> e.getValue());
-        return setBoarders.equals(correctBoarders);
-    }
-
-    public void toggleBoarder(String boarder, Boolean value){
-        if (value == null){
-            var boarderValue = boarders.get(boarder);
-            if (boarderValue == null){
-                boarders.put(boarder, true);
-            }else if (boarderValue){
-                boarders.put(boarder, false);
-            } else {
-                boarders.put(boarder, null);
+    public boolean isCellCorrect(){
+        for (var boarder : boarders) {
+            if (!boarder.isCorrect()) {
+                return false;
             }
-        }else {
-            boarders.put(boarder, value);
         }
+        return true;
     }
 
     @Override
     protected Object clone() throws CloneNotSupportedException {
         Cell cloned = (Cell) super.clone();
-        cloned.boarders = new HashMap<>(this.boarders);
-        cloned.result = new HashMap<>(this.result);
+        cloned.boarders = new ArrayList<>();
         return cloned;
     }
 }
