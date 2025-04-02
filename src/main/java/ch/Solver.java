@@ -72,7 +72,7 @@ public class Solver {
                  if (cell.getValue() == 0 && outsideCount > 0) return false;
              } else {
                  if ((cell.getValue() == 1 || cell.getValue() == 3) && ((outsideCount > 1 && insideCount > 1) || outsideCount > 3 || insideCount > 3)) return false;
-                 if (cell.getValue() == 0 && outsideCount > 0 && insideCount > 0) return false; // this is not logical
+                 if (cell.getValue() == 0 && outsideCount > 0 && insideCount > 0) return false;
              }
 
              if (cell.getValue() == 2 && (outsideCount > 2 || insideCount > 2)) return false;
