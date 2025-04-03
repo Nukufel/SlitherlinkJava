@@ -1,5 +1,6 @@
 package ch;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class Grid {
@@ -7,12 +8,14 @@ public class Grid {
     private ArrayList<Cell> cells = new ArrayList<>();
     private ArrayList<Cell> insideCells = new ArrayList<>();
     private ArrayList<Cell> removedCells = new ArrayList<>();
-    public ArrayList<Boarder> boarders = new ArrayList<>();
-
 
 
     public Grid() throws CloneNotSupportedException {
         initializeCells();
+        initializeInsideCells();
+        setResultBoardersForAllCells();
+        setNumberForAllCells();
+        removeNumbers();
     }
 
     public void initializeCells() { //TODO make all the boarders and add them to the cells
@@ -22,43 +25,25 @@ public class Grid {
             for (int j = 0; j < Settings.gridCols; j++) {
                 var cell = new Cell(i, j);
 
-                if (cell.getId() == 0){
-                    Location loc = Location.TOP;
-                    for (int h = 0; i < 4; i++){
-                        var boarder = new Boarder(boarderCount);
-                        boarder.addCellId(cell.getId());
-                        cell.addBoarder(loc, boarder);
-                        boarderCount++;
-                        loc = Location.getNext(loc);
-                    }
-                } else if (Settings.topIDs.contains(cell.getId())){
+                if (cell.getId() == 0) {
+                    makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
+
+                } else if (Settings.topIDs.contains(cell.getId())) {
                     var lastCell = cells.getLast();
                     var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
                     sharedBoarder.addCellId(cell.getId());
                     cell.addBoarder(Location.LEFT, sharedBoarder);
 
-                    Location loc = Location.TOP;
-                    for (int h = 0; h < 3; h++){
-                        var boarder = new Boarder(boarderCount);
-                        boarder.addCellId(cell.getId());
-                        cell.addBoarder(loc, boarder);
-                        boarderCount++;
-                        loc = Location.getNext(loc);
-                    }
-                } else if (Settings.leftIDs.contains(cell.getId())){
+                    makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
+
+                } else if (Settings.leftIDs.contains(cell.getId())) {
                     var cellAbove = cells.get(cell.getId() - Settings.gridCols);
                     var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
                     sharedBoarder.addCellId(cell.getId());
                     cell.addBoarder(Location.TOP, sharedBoarder);
 
-                    Location loc = Location.RIGHT;
-                    for (int h = 0; h < 3; h++){
-                        var boarder = new Boarder(boarderCount);
-                        boarder.addCellId(cell.getId());
-                        cell.addBoarder(loc, boarder);
-                        boarderCount++;
-                        loc = Location.getNext(loc);
-                    }
+                    makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
+
                 } else {
                     var lastCell = cells.getLast();
                     var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
@@ -70,20 +55,24 @@ public class Grid {
                     sharedBoarder2.addCellId(cell.getId());
                     cell.addBoarder(Location.TOP, sharedBoarder2);
 
-                    Location loc = Location.RIGHT;
-                    for (int h = 0; h < 2; h++){
-                        var boarder = new Boarder(boarderCount);
-                        boarder.addCellId(cell.getId());
-                        cell.addBoarder(loc, boarder);
-                        boarderCount++;
-                        loc = Location.getNext(loc);
-                    }
+                    makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
+
                 }
                 cells.add(cell);
             }
         }
     }
 
+    public void makeNewBoardersForCell(Cell cell, int boarderCount, Location startLocation, int amountOfNewBoarders) {
+        Location loc = startLocation;
+        for (int h = 0; h < amountOfNewBoarders; h++) {
+            var boarder = new Boarder(boarderCount);
+            boarder.addCellId(cell.getId());
+            cell.addBoarder(loc, boarder);
+            boarderCount++;
+            loc = Location.getNext(loc);
+        }
+    }
 
     public void initializeInsideCells(){
         Random random = new Random();
@@ -240,13 +229,14 @@ public class Grid {
 
     public int calculateConsecutiveInsideCellsCount(Cell adjacentCell, Cell baseCell){
         var count = 1;
-        var opositeDirection = baseCell.getId() - adjacentCell.getId();
+        var step = baseCell.getId() - adjacentCell.getId();
         var nextAdjacentCell = adjacentCell;
         while (true) {
-            if (!isNextCellValid(nextAdjacentCell, Settings.directions.entrySet().stream().filter(e -> e.getValue() == opositeDirection).findFirst().get())) {
+            // TODO make via boarders
+            if (!isNextCellValid(nextAdjacentCell, Settings.directions.entrySet().stream().filter(e -> e.getValue() == step).findFirst().get())) {
                 break;
             }
-            nextAdjacentCell = cells.get(nextAdjacentCell.getId() + opositeDirection);
+            nextAdjacentCell = cells.get(nextAdjacentCell.getId() + step);
             if (nextAdjacentCell.getIsInside() == MyBoolean.TRUE) {
                 count++;
             } else {
@@ -290,6 +280,7 @@ public class Grid {
     }
 
     public boolean isNextCellValid(Cell cell, Map.Entry<String, Integer> directionEntry){
+        // TODO make via Boarders if this is still necessary
         if (Settings.topIDs.contains(cell.getId()) && directionEntry.getKey().equals("top")) {
             return false;
         }
@@ -354,23 +345,6 @@ public class Grid {
         }
     }
 
-    @Override
-    protected Grid clone() throws CloneNotSupportedException {
-        Grid grid = new Grid();
-        grid.cells = new ArrayList<>();
-        for (Cell cell : cells) {
-            grid.cells.add((Cell) cell.clone());
-        }
-        grid.insideCells = new ArrayList<>();
-        for (Cell cell : insideCells) {
-            grid.insideCells.add((Cell) cell.clone());
-        }
-        grid.removedCells = new ArrayList<>();
-        for (Cell cell : removedCells) {
-            grid.removedCells.add((Cell) cell.clone());
-        }
-        return grid;
-    }
 
     public Stack<Action> getActionStack() {
         return actionStack;

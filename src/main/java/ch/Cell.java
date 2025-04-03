@@ -96,7 +96,7 @@ public class Cell {
     public void calcValue(){
         var count = 0;
         for (var boarder : boarders.values()) {
-            if (boarder.getState() == MyBoolean.TRUE) {
+            if (boarder.getResult() == MyBoolean.TRUE) {
                 count++;
             }
         }
@@ -110,12 +110,5 @@ public class Cell {
             }
         }
         return true;
-    }
-
-    @Override
-    protected Object clone() throws CloneNotSupportedException {
-        Cell cloned = (Cell) super.clone();
-        cloned.boarders = new HashMap<>();
-        return cloned;
     }
 }
