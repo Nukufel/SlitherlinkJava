@@ -21,6 +21,9 @@ public class Cell {
         showValue = true;
     }
 
+    public void addBoarder(Location location, Boarder boarder) {
+        boarders.put(location, boarder);
+    }
 
     public int getId() {
         return id;
@@ -46,11 +49,11 @@ public class Cell {
         this.isInside = isInside;
     }
 
-    public ArrayList<Boarder> getBoarders() {
+    public HashMap<Location, Boarder> getBoarders() {
         return boarders;
     }
 
-    public void setBoarders(ArrayList<Boarder> boarders) {
+    public void setBoarders(HashMap<Location, Boarder> boarders) {
         this.boarders = boarders;
     }
 
@@ -78,13 +81,21 @@ public class Cell {
         this.col = col;
     }
 
+    public boolean hasValue(){
+        return value != null;
+    }
+
     public boolean hasBoarder() {
         return !boarders.isEmpty();
     }
 
+    public Boarder getBoarderByLocation(Location location) {
+        return boarders.get(location);
+    }
+
     public void calcValue(){
         var count = 0;
-        for (var boarder : boarders) {
+        for (var boarder : boarders.values()) {
             if (boarder.getState() == MyBoolean.TRUE) {
                 count++;
             }
@@ -93,7 +104,7 @@ public class Cell {
     }
 
     public boolean isCellCorrect(){
-        for (var boarder : boarders) {
+        for (var boarder : boarders.values()) {
             if (!boarder.isCorrect()) {
                 return false;
             }
@@ -104,7 +115,7 @@ public class Cell {
     @Override
     protected Object clone() throws CloneNotSupportedException {
         Cell cloned = (Cell) super.clone();
-        cloned.boarders = new ArrayList<>();
+        cloned.boarders = new HashMap<>();
         return cloned;
     }
 }

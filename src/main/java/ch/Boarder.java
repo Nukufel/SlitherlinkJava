@@ -1,9 +1,12 @@
 package ch;
 
+import java.util.ArrayList;
+
 public class Boarder {
     MyBoolean state = MyBoolean.NULL;
     MyBoolean result = MyBoolean.NULL;
     Integer id;
+    ArrayList<Integer> cellIds = new ArrayList<>(2);
 
     public Boarder(Integer id) {
         this.id = id;
@@ -19,6 +22,23 @@ public class Boarder {
         if (state == MyBoolean.NULL) {
             state = MyBoolean.TRUE;
         }
+    }
+
+    public void addCellId(Integer id) {
+        cellIds.add(id);
+    }
+
+    public ArrayList<Integer> getCellIds() {
+        return cellIds;
+    }
+
+    public Integer getOtherCellId(Integer id) {
+        for (Integer cellId : cellIds) {
+            if (!cellId.equals(id)) {
+                return cellId;
+            }
+        }
+        return null;
     }
 
     public boolean isCorrect(){

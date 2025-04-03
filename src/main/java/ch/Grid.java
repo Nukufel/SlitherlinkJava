@@ -12,22 +12,74 @@ public class Grid {
 
 
     public Grid() throws CloneNotSupportedException {
-        initializeBoarders();
         initializeCells();
-
-    }
-
-    public void initializeBoarders(){
-
     }
 
     public void initializeCells() { //TODO make all the boarders and add them to the cells
-        var boarderCount = 0;
+        int boarderCount = 0;
+
         for (int i = 0; i < Settings.gridRows; i++) {
             for (int j = 0; j < Settings.gridCols; j++) {
                 var cell = new Cell(i, j);
-                cells.add(cell);
 
+                if (cell.getId() == 0){
+                    Location loc = Location.TOP;
+                    for (int h = 0; i < 4; i++){
+                        var boarder = new Boarder(boarderCount);
+                        boarder.addCellId(cell.getId());
+                        cell.addBoarder(loc, boarder);
+                        boarderCount++;
+                        loc = Location.getNext(loc);
+                    }
+                } else if (Settings.topIDs.contains(cell.getId())){
+                    var lastCell = cells.getLast();
+                    var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
+                    sharedBoarder.addCellId(cell.getId());
+                    cell.addBoarder(Location.LEFT, sharedBoarder);
+
+                    Location loc = Location.TOP;
+                    for (int h = 0; h < 3; h++){
+                        var boarder = new Boarder(boarderCount);
+                        boarder.addCellId(cell.getId());
+                        cell.addBoarder(loc, boarder);
+                        boarderCount++;
+                        loc = Location.getNext(loc);
+                    }
+                } else if (Settings.leftIDs.contains(cell.getId())){
+                    var cellAbove = cells.get(cell.getId() - Settings.gridCols);
+                    var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
+                    sharedBoarder.addCellId(cell.getId());
+                    cell.addBoarder(Location.TOP, sharedBoarder);
+
+                    Location loc = Location.RIGHT;
+                    for (int h = 0; h < 3; h++){
+                        var boarder = new Boarder(boarderCount);
+                        boarder.addCellId(cell.getId());
+                        cell.addBoarder(loc, boarder);
+                        boarderCount++;
+                        loc = Location.getNext(loc);
+                    }
+                } else {
+                    var lastCell = cells.getLast();
+                    var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
+                    sharedBoarder1.addCellId(cell.getId());
+                    cell.addBoarder(Location.LEFT, sharedBoarder1);
+
+                    var cellAbove = cells.get(cell.getId() - Settings.gridCols);
+                    var sharedBoarder2 = cellAbove.getBoarderByLocation(Location.BOTTOM);
+                    sharedBoarder2.addCellId(cell.getId());
+                    cell.addBoarder(Location.TOP, sharedBoarder2);
+
+                    Location loc = Location.RIGHT;
+                    for (int h = 0; h < 2; h++){
+                        var boarder = new Boarder(boarderCount);
+                        boarder.addCellId(cell.getId());
+                        cell.addBoarder(loc, boarder);
+                        boarderCount++;
+                        loc = Location.getNext(loc);
+                    }
+                }
+                cells.add(cell);
             }
         }
     }
@@ -47,7 +99,7 @@ public class Grid {
         while (insideCells.size() < projectedInsideCellCount && failCount < Settings.failCount){
             var randomInsideCell = insideCells.get(random.nextInt(insideCells.size()));
 
-            var adjacentCells = getAdjacentCells(randomInsideCell, Settings.directions);
+            var adjacentCells = getAdjacentCells(randomInsideCell);
             var weights = wightCell(adjacentCells, randomInsideCell);
             var adjacentWeightedCells = new HashMap<Cell, Integer>();
 
@@ -111,7 +163,7 @@ public class Grid {
             return removedCells;
         }
 
-        Cell randomNumberedCell = null; // get random numerd cell
+        Cell randomNumberedCell = getRandomNumberedCell(); // get random numerd cell
         Integer number = randomNumberedCell.getValue();
         randomNumberedCell.setShowValue(false);
 
@@ -130,11 +182,16 @@ public class Grid {
 
     }
 
-    public ArrayList<Cell> getAdjacentCells(Cell cell, HashMap<String, Integer> directions){
+    public Cell getRandomNumberedCell() {
+        ArrayList<Cell> numberedCells = (ArrayList<Cell>) cells.stream().filter(x -> x.hasValue()).toList();
+        return numberedCells.get(new Random().nextInt(numberedCells.size()-1));
+    }
+
+    public ArrayList<Cell> getAdjacentCells(Cell cell){
         var adjacentCells = new ArrayList<Cell>();
-        for (Map.Entry<String, Integer> directionEntry: directions.entrySet()) {
-            if (isNextCellValid(cell, directionEntry)) {
-                var adjacentCell = cells.get(cell.getId() + directionEntry.getValue());
+        for (Location location : Location.values()) {
+            var adjacentCell = getCellByBoarder(cell, location);
+            if (adjacentCell != null) {
                 adjacentCells.add(adjacentCell);
             }
         }
@@ -145,7 +202,7 @@ public class Grid {
         var weights = new ArrayList<Integer>();
         for (Cell adjacentCell : adjacentCells){
             var score = 100;
-            var adjacentCellsOfAdjacentCells = getAdjacentCells(adjacentCell, Settings.directions);
+            var adjacentCellsOfAdjacentCells = getAdjacentCells(adjacentCell);
             for (Cell adjacentCellsOfAdjacentCell : adjacentCellsOfAdjacentCells) {
                 if (adjacentCellsOfAdjacentCell.getIsInside() == MyBoolean.TRUE) {
                     score -= 22;
@@ -264,61 +321,32 @@ public class Grid {
         return true;
     }
 
-    public void setBoarder(Cell cell, String location, MyBoolean value){
-        cell.toggleBoarder(location, value);
-        HashMap<String, Integer> oppositeLocation = getOppositeDirection(location);
-        Cell oppositeCell = getAdjacentCells(cell, oppositeLocation).getFirst();
-        if (oppositeCell != null) {
-            oppositeCell.toggleBoarder(getOppositeLocation(location), value);
-        }
-    }
-
-    public void setResultBoarders(Cell cell, String location, Boolean value){
-        cell.getResult().put(location, value);
-        HashMap<String, Integer> oppositeLocation = getOppositeDirection(location);
-        Cell oppositeCell = getAdjacentCells(cell, oppositeLocation).getFirst();
-        if (oppositeCell != null) {
-            oppositeCell.getResult().put(getOppositeLocation(location), value);
-        }
-    }
-
-    public HashMap<String, Integer> getOppositeDirection(String location){
-            var oppositeDirectionValue = Settings.directions.get("bottom");
-            var oppositeDirection = new HashMap<String, Integer>();
-            oppositeDirection.put(getOppositeLocation(location), oppositeDirectionValue);
-            return oppositeDirection;
+    public void setBoarder(Cell cell, Location location, MyBoolean state){
+        cell.getBoarderByLocation(location).setState(state);
     }
 
     public void setResultBoardersForAllCells(){
         for (Cell cell : cells) {
             if (cell.getIsInside() == MyBoolean.TRUE) {
-                for (Map.Entry<String, Integer> direction : Settings.directions.entrySet()) {
-                    HashMap<String, Integer> directionMap = new HashMap<>();
-                    directionMap.put(direction.getKey(), direction.getValue());
-                    Cell adjacentCell = getAdjacentCells(cell, directionMap).getFirst();
-                    if (adjacentCell == null || adjacentCell.getIsInside() == MyBoolean.FALSE) {
-                        setResultBoarders(cell, direction.getKey(), true);
-                    }
-                }
+               for (Location location : Location.values()) {
+                   var adjacentCell = getCellByBoarder(cell, location);
+                   if (adjacentCell == null || adjacentCell.getIsInside() == MyBoolean.FALSE) {
+                       cell.getBoarderByLocation(location).setResult(MyBoolean.TRUE);
+                   }
+               }
             }
         }
     }
 
-    public String getOppositeLocation(String location){
-        if (location.equals("top")) {
-            return "bottom";
+    public Cell getCellByBoarder(Cell cell, Location location){
+        var boarder = cell.getBoarderByLocation(location);
+        var otherCellId = boarder.getOtherCellId(cell.getId());
+        if (otherCellId == null) {
+            return null;
         }
-        if (location.equals("right")) {
-            return "left";
-        }
-        if (location.equals("bottom")) {
-            return "top";
-        }
-        if (location.equals("left")) {
-            return "right";
-        }
-        return null;
+        return cells.get(otherCellId);
     }
+
 
     public void setCellsUnidentified(){
         for (Cell cell : cells) {
