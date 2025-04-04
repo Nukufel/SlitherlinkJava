@@ -4,39 +4,43 @@ import java.util.*;
 
 public class Settings {
     public static int cellSize = 50;
-    public static int gridRows = 5, gridCols = 5;
+    public static int gridRows = 10, gridCols = 10;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
-    public static HashMap<String, Integer> directions = new HashMap<>();
+    public static HashMap<String, Integer> directions = calculateDirections();
     public static int[] insidePercentageRange = {58, 60};
-    public static int insidePercentage;
+    public static int insidePercentage = calculateInsidePercentage();
     public static int removeAmount = (int) (cellCount * 0.5);
     public static int fastRemoveAmount = (int) (cellCount * 0.4);
-    public static ArrayList<Integer> cornerIDs = new ArrayList<>();
-    public static ArrayList<Integer> edgeIDs = new ArrayList<>();
-    public static ArrayList<Integer> topIDs = new ArrayList<>();
-    public static ArrayList<Integer> rightIDs = new ArrayList<>();
-    public static ArrayList<Integer> bottomIDs = new ArrayList<>();
-    public static ArrayList<Integer> leftIDs = new ArrayList<>();
+    public static ArrayList<Integer> cornerIDs = calculateCornerIds();
+    public static ArrayList<Integer> edgeIDs = calculateEdgeIDs();
+    public static ArrayList<Integer> topIDs = calculateTopIDs();
+    public static ArrayList<Integer> rightIDs = calculateRightIDs();
+    public static ArrayList<Integer> bottomIDs = calculateBottomIDs();
+    public static ArrayList<Integer> leftIDs = calculateLeftIDs();
 
-    public Settings(){
-        directions.put("top", -gridRows);
-        directions.put("right", 1);
-        directions.put("bottom", gridRows);
-        directions.put("left", -1);
+    public static ArrayList<Integer> calculateCornerIds(){
+        var myList = new ArrayList<Integer>();
+        myList.add(0);
+        myList.add(gridCols - 1);
+        myList.add(cellCount - gridCols);
+        myList.add(cellCount - 1);
+        return myList;
+    }
 
-        cornerIDs.add(0);
-        cornerIDs.add(gridCols - 1);
-        cornerIDs.add(cellCount - gridCols);
-        cornerIDs.add(cellCount - 1);
+    public static HashMap<String, Integer> calculateDirections(){
+        var myMap = new HashMap<String, Integer>();
+        myMap.put("top", -gridRows);
+        myMap.put("right", 1);
+        myMap.put("bottom", gridRows);
+        myMap.put("left", -1);
+        return myMap;
+    }
 
+    public static Integer calculateInsidePercentage()
+    {
         Random random = new Random();
-        insidePercentage = (random.nextInt(insidePercentageRange[1] - insidePercentageRange[0] + 1) + insidePercentageRange[0]) / 100;
-        edgeIDs = calculateEdgeIDs();
-        topIDs = calculateTopIDs();
-        rightIDs = calculateRightIDs();
-        bottomIDs = calculateBottomIDs();
-        leftIDs = calculateLeftIDs();
+        return (random.nextInt(insidePercentageRange[1] - insidePercentageRange[0] + 1) + insidePercentageRange[0]) / 100;
     }
 
     public static ArrayList<Integer> calculateEdgeIDs() {

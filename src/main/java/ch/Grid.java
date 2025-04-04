@@ -1,6 +1,5 @@
 package ch;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class Grid {
@@ -42,7 +41,6 @@ public class Grid {
 
             if (cell.getId() == 0) {
                 makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
-
             } else if (Settings.topIDs.contains(cell.getId())) {
                 var lastCell = cells.getLast();
                 var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
@@ -60,6 +58,7 @@ public class Grid {
                 makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
 
             } else {
+
                 var lastCell = cells.getLast();
                 var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
                 sharedBoarder1.addCellId(cell.getId());
