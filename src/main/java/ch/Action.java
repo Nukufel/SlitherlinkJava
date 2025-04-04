@@ -4,15 +4,18 @@ public class Action {
     private Cell cell;
     private String location;
     private Boolean value;
-    private int row;
-    private int col;
+
 
     public Action(Cell cell, String location, Boolean value) {
         this.cell = cell;
         this.location = location;
         this.value = value;
-        this.row = cell.getRow();
-        this.col = cell.getCol();
+    }
+
+    public Action(Action other) {
+        this.cell = new Cell(other.cell);
+        this.location = other.location;
+        this.value = other.value;
     }
 
     public Cell getCell() {
@@ -37,21 +40,5 @@ public class Action {
 
     public void setValue(Boolean value) {
         this.value = value;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public void setRow(int row) {
-        this.row = row;
-    }
-
-    public int getCol() {
-        return col;
-    }
-
-    public void setCol(int col) {
-        this.col = col;
     }
 }

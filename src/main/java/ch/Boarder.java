@@ -1,8 +1,9 @@
 package ch;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Boarder {
+public class Boarder implements Serializable {
     MyBoolean state = MyBoolean.NULL;
     MyBoolean result = MyBoolean.NULL;
     Integer id;
@@ -10,6 +11,13 @@ public class Boarder {
 
     public Boarder(Integer id) {
         this.id = id;
+    }
+
+    public Boarder(Boarder other) {
+        this.id = other.id;
+        this.state = other.state;
+        this.result = other.result;
+        this.cellIds = new ArrayList<>(other.cellIds);
     }
 
     public void toggleBoarder() {

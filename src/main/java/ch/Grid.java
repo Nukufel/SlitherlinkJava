@@ -10,7 +10,7 @@ public class Grid {
     private ArrayList<Cell> removedCells = new ArrayList<>();
 
 
-    public Grid() throws CloneNotSupportedException {
+    public Grid() {
         initializeCells();
         initializeInsideCells();
         setResultBoardersForAllCells();
@@ -18,48 +18,63 @@ public class Grid {
         removeNumbers();
     }
 
-    public void initializeCells() { //TODO make all the boarders and add them to the cells
+    public Grid(Grid other) {
+        this.actionStack = new Stack<>();
+        for (Action action : other.actionStack) {
+            this.actionStack.push(new Action(action)); // Assuming Action has a copy constructor
+        }
+
+        this.cells = new ArrayList<>();
+        for (Cell cell : other.cells) {
+            this.cells.add(new Cell(cell)); // Assuming Cell has a copy constructor
+        }
+    }
+
+    public Grid deepCopy() {
+        return new Grid(this);
+    }
+
+    public void initializeCells() {
         int boarderCount = 0;
 
-        for (int i = 0; i < Settings.gridRows; i++) {
-            for (int j = 0; j < Settings.gridCols; j++) {
-                var cell = new Cell(i, j);
+        for (int i = 0; i < Settings.cellCount; i++) {
+            var cell = new Cell(i);
 
-                if (cell.getId() == 0) {
-                    makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
+            if (cell.getId() == 0) {
+                makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
 
-                } else if (Settings.topIDs.contains(cell.getId())) {
-                    var lastCell = cells.getLast();
-                    var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
-                    sharedBoarder.addCellId(cell.getId());
-                    cell.addBoarder(Location.LEFT, sharedBoarder);
+            } else if (Settings.topIDs.contains(cell.getId())) {
+                var lastCell = cells.getLast();
+                var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
+                sharedBoarder.addCellId(cell.getId());
+                cell.addBoarder(Location.LEFT, sharedBoarder);
 
-                    makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
+                makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
 
-                } else if (Settings.leftIDs.contains(cell.getId())) {
-                    var cellAbove = cells.get(cell.getId() - Settings.gridCols);
-                    var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
-                    sharedBoarder.addCellId(cell.getId());
-                    cell.addBoarder(Location.TOP, sharedBoarder);
+            } else if (Settings.leftIDs.contains(cell.getId())) {
+                var cellAbove = cells.get(cell.getId() - Settings.gridCols);
+                var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
+                sharedBoarder.addCellId(cell.getId());
+                cell.addBoarder(Location.TOP, sharedBoarder);
 
-                    makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
+                makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
 
-                } else {
-                    var lastCell = cells.getLast();
-                    var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
-                    sharedBoarder1.addCellId(cell.getId());
-                    cell.addBoarder(Location.LEFT, sharedBoarder1);
+            } else {
+                var lastCell = cells.getLast();
+                var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
+                sharedBoarder1.addCellId(cell.getId());
+                cell.addBoarder(Location.LEFT, sharedBoarder1);
 
-                    var cellAbove = cells.get(cell.getId() - Settings.gridCols);
-                    var sharedBoarder2 = cellAbove.getBoarderByLocation(Location.BOTTOM);
-                    sharedBoarder2.addCellId(cell.getId());
-                    cell.addBoarder(Location.TOP, sharedBoarder2);
+                var cellAbove = cells.get(cell.getId() - Settings.gridCols);
+                var sharedBoarder2 = cellAbove.getBoarderByLocation(Location.BOTTOM);
+                sharedBoarder2.addCellId(cell.getId());
+                cell.addBoarder(Location.TOP, sharedBoarder2);
 
-                    makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
+                makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
 
-                }
-                cells.add(cell);
             }
+            cells.add(cell);
+
         }
     }
 
@@ -117,10 +132,10 @@ public class Grid {
         }
     }
 
-    public void removeNumbers() throws CloneNotSupportedException {
+    public void removeNumbers() {
         boolean isDone = false;
         int removeAmount = Settings.removeAmount;
-        Grid copiedGrid = this.clone();
+        Grid copiedGrid = deepCopy();
         var solver = new Solver(copiedGrid, this);
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {

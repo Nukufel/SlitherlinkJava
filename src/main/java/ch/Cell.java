@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Cell {
-    private int row;
-    private int col;
     private int id;
     private MyBoolean isInside;
     private Integer value;
@@ -13,12 +11,24 @@ public class Cell {
 
     private HashMap<Location, Boarder> boarders = new HashMap<>();
 
-    public Cell(int row, int col) {
-        this.row = row;
-        this.col = col;
-        id = row + col;
+    public Cell(int id) {
+        this.id = id;
         value = null;
         showValue = true;
+    }
+
+    public Cell(Cell other) {
+        this.id = other.id;
+        this.value = other.value;
+        this.showValue = other.showValue;
+        this.isInside = other.isInside; // Assuming MyBoolean is immutable
+
+        // Deep copy of the boarders map
+        this.boarders = new HashMap<>();
+        for (Location loc : other.boarders.keySet()) {
+            Boarder originalBoarder = other.boarders.get(loc);
+            this.boarders.put(loc, new Boarder(originalBoarder)); // Assuming Boarder has a copy constructor
+        }
     }
 
     public void addBoarder(Location location, Boarder boarder) {
@@ -31,14 +41,6 @@ public class Cell {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public void setRow(int row) {
-        this.row = row;
     }
 
     public MyBoolean getIsInside() {
@@ -71,14 +73,6 @@ public class Cell {
 
     public void setValue(Integer value) {
         this.value = value;
-    }
-
-    public int getCol() {
-        return col;
-    }
-
-    public void setCol(int col) {
-        this.col = col;
     }
 
     public boolean hasValue(){
