@@ -1,17 +1,14 @@
 package ch;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.shape.Line;
-import kotlin.Pair;
-
-import javax.swing.*;
 
 
 public class Ui extends Application {
@@ -23,6 +20,7 @@ public class Ui extends Application {
         gameGrid = new Grid();
 
         Pane root = new Pane();
+        root.setBackground(new Background(new BackgroundFill(Color.BLACK, null, null)));
         root.setPrefSize(Settings.gridCols * cellSize + 40, Settings.gridRows * cellSize + 40);
 
         drawGrid(root);
@@ -36,6 +34,8 @@ public class Ui extends Application {
     public void drawGrid(Pane root) {
         Pane rects = new Pane();
         rects.setPrefSize(Settings.gridCols * cellSize, Settings.gridRows * cellSize);
+        rects.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.NONE, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+
         Pane lines = new Pane();
         lines.setPrefSize(Settings.gridCols * cellSize, Settings.gridRows * cellSize);
 
@@ -48,8 +48,19 @@ public class Ui extends Application {
                 int y = row * cellSize;
 
                 // Draw the cell background
+                StackPane rectWithText = new StackPane();
+                Text text = new Text(cell.getValue().toString());
+                text.setFill(Color.WHITE);
                 Rectangle cellRect = new Rectangle(x, y, cellSize, cellSize);
-                rects.getChildren().add(cellRect);
+                if (cell.getIsInside() == MyBoolean.TRUE){
+                    cellRect.setFill(Color.LIGHTBLUE);
+                } else {
+                    cellRect.setFill(Color.GREEN);
+                }
+
+                rectWithText.getChildren().addAll(cellRect, text);
+                rectWithText.relocate(x, y);
+                rects.getChildren().add(rectWithText);
 
 
                 // --- Draw boarders for this cell ---
@@ -87,8 +98,9 @@ public class Ui extends Application {
                 }
             }
         }
+        rects.relocate(20,20);
+        rects.getChildren().add(lines);
         root.getChildren().add(rects);
-        root.getChildren().add(lines);
     }
 
     private Group addLine(Integer x1, Integer y1, Integer x2, Integer y2, Boarder boarder, Location loc) {
@@ -97,14 +109,18 @@ public class Ui extends Application {
         line.setStroke(Color.GRAY);
         line.setFill(Color.GRAY);
 
+        if (boarder.getResult() == MyBoolean.TRUE){
+            line.setStroke(Color.DEEPPINK);
+        }
+
         // Create a transparent Rectangle as the click target
         double thickness = 30.0; // "clickable" width
 
         Rectangle clickArea;
         if (loc == Location.TOP || loc == Location.BOTTOM) {
-            clickArea = new Rectangle(x1, y1 - thickness/2, Settings.cellSize, thickness);
+            clickArea = new Rectangle(x1, y1 - thickness/2, cellSize, thickness);
         } else {
-            clickArea = new Rectangle(x1 - thickness/2, y1, thickness, Settings.cellSize);
+            clickArea = new Rectangle(x1 - thickness/2, y1, thickness, cellSize);
         }
 
         clickArea.setFill(Color.TRANSPARENT);
