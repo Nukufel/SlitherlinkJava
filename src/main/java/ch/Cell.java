@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class Cell {
     private int id;
-    private MyBoolean isInside;
+    private MyBoolean isInside = MyBoolean.FALSE;
     private Integer value;
     private Boolean showValue;
 

@@ -24,10 +24,10 @@ public class Boarder implements Serializable {
         if (state == MyBoolean.FALSE) {
             state = MyBoolean.NULL;
         }
-        if (state == MyBoolean.TRUE) {
+        else if (state == MyBoolean.TRUE) {
             state = MyBoolean.FALSE;
         }
-        if (state == MyBoolean.NULL) {
+        else if (state == MyBoolean.NULL) {
             state = MyBoolean.TRUE;
         }
     }

@@ -14,7 +14,7 @@ public class Grid {
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
-        removeNumbers();
+        //removeNumbers();
     }
 
     public Grid(Grid other) {
@@ -88,22 +88,22 @@ public class Grid {
         }
     }
 
-    public void initializeInsideCells(){
+    public void initializeInsideCells() {
         Random random = new Random();
 
         var failCount = 0;
-        var insidePercentage = Settings.insidePercentage;
-        var projectedInsideCellCount = Settings.cellCount * insidePercentage;
+        var projectedInsideCellCount = Settings.cellCount * Settings.insidePercentage;
         var initialInsideCell = cells.get(random.nextInt(cells.size()));
 
         initialInsideCell.setIsInside(MyBoolean.TRUE);
         insideCells.add(initialInsideCell);
 
-        while (insideCells.size() < projectedInsideCellCount && failCount < Settings.failCount){
+
+        while (insideCells.size() < projectedInsideCellCount && failCount < Settings.failCount) {
             var randomInsideCell = insideCells.get(random.nextInt(insideCells.size()));
 
             var adjacentCells = getAdjacentCells(randomInsideCell);
-            var weights = wightCell(adjacentCells, randomInsideCell);
+            var weights = weightCell(adjacentCells, randomInsideCell);
             var adjacentWeightedCells = new HashMap<Cell, Integer>();
 
             for (int i = 0; i < adjacentCells.size(); i++) {
@@ -113,20 +113,19 @@ public class Grid {
             }
 
             if (!adjacentWeightedCells.isEmpty()) {
-               var randomWeightedCell = getRandomWeightedCell(adjacentWeightedCells);
-
-               if (!insideCells.contains(randomWeightedCell)) {
-                   randomWeightedCell.setIsInside(MyBoolean.TRUE);
-                   if (allConnected(insideCells.size() + 1)) {
-                       failCount = 0;
-                       insideCells.add(randomWeightedCell);
-                   } else {
-                       randomWeightedCell.setIsInside(MyBoolean.FALSE);
-                   }
-                   insideCells.add(randomWeightedCell);
-               } else {
-                   failCount++;
-               }
+                var randomWeightedCell = getRandomWeightedCell(adjacentWeightedCells);
+                System.out.println(randomWeightedCell.getId());
+                if (!insideCells.contains(randomWeightedCell)) {
+                    randomWeightedCell.setIsInside(MyBoolean.TRUE);
+                    if (allConnected(insideCells.size() + 1)) {
+                        failCount = 0;
+                        insideCells.add(randomWeightedCell);
+                    } else {
+                        randomWeightedCell.setIsInside(MyBoolean.FALSE);
+                    }
+                } else {
+                    failCount++;
+                }
             }
         }
     }
@@ -138,9 +137,9 @@ public class Grid {
         var solver = new Solver(copiedGrid, this);
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
-            ArrayList<Cell> numbersToRemove =  copiedGrid.removeNumber(solver, removeAmount);
+            ArrayList<Cell> numbersToRemove = copiedGrid.removeNumber(solver, removeAmount);
             if (!numbersToRemove.isEmpty()) {
-                for (Cell copiedCell : numbersToRemove){
+                for (Cell copiedCell : numbersToRemove) {
                     Cell cell = cells.get(copiedCell.getId());
                     cell.setShowValue(false);
                 }
@@ -154,7 +153,7 @@ public class Grid {
 
     }
 
-    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount){
+    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount) {
         boolean fastRemove = false;
 
 
@@ -166,14 +165,14 @@ public class Grid {
             return removedCells;
         }
 
-        Cell randomNumberedCell = getRandomNumberedCell(); // get random numerd cell
+        Cell randomNumberedCell = getRandomNumberedCell();
         Integer number = randomNumberedCell.getValue();
         randomNumberedCell.setShowValue(false);
 
         removedCells.add(randomNumberedCell);
 
-        if (fastRemove || solver.hasSingleSolution()){
-            if (!removeNumber(solver, removeAmount-1).isEmpty()){
+        if (fastRemove || solver.hasSingleSolution()) {
+            if (!removeNumber(solver, removeAmount - 1).isEmpty()) {
                 return removedCells;
             }
         }
@@ -187,10 +186,10 @@ public class Grid {
 
     public Cell getRandomNumberedCell() {
         ArrayList<Cell> numberedCells = (ArrayList<Cell>) cells.stream().filter(x -> x.hasValue()).toList();
-        return numberedCells.get(new Random().nextInt(numberedCells.size()-1));
+        return numberedCells.get(new Random().nextInt(numberedCells.size() - 1));
     }
 
-    public ArrayList<Cell> getAdjacentCells(Cell cell){
+    public ArrayList<Cell> getAdjacentCells(Cell cell) {
         var adjacentCells = new ArrayList<Cell>();
         for (Location location : Location.values()) {
             var adjacentCell = getCellByBoarder(cell, location);
@@ -201,9 +200,9 @@ public class Grid {
         return adjacentCells;
     }
 
-    public ArrayList<Integer> wightCell(ArrayList<Cell> adjacentCells, Cell baseCell){
+    public ArrayList<Integer> weightCell(ArrayList<Cell> adjacentCells, Cell baseCell) {
         var weights = new ArrayList<Integer>();
-        for (Cell adjacentCell : adjacentCells){
+        for (Cell adjacentCell : adjacentCells) {
             var score = 100;
             var adjacentCellsOfAdjacentCells = getAdjacentCells(adjacentCell);
             for (Cell adjacentCellsOfAdjacentCell : adjacentCellsOfAdjacentCells) {
@@ -211,10 +210,10 @@ public class Grid {
                     score -= 22;
                 }
             }
-            score -= calculateConsecutiveInsideCellsCount(adjacentCell, baseCell);
+            //score -= calculateConsecutiveInsideCellsCount(adjacentCell, baseCell);
             score += new Random().nextInt(5 - (-5)) + (-5);
 
-            if (score < 0){
+            if (score < 0) {
                 score = 0;
             }
             weights.add(score);
@@ -222,45 +221,25 @@ public class Grid {
         return weights;
     }
 
-    public boolean allConnected(int insideCount){
+    public boolean allConnected(int insideCount) {
 
         var foundOutsideCells = getStartOutsideCells();
 
-        for (Cell outsideCell : foundOutsideCells) {
-            for (Integer directionValue : Settings.directions.values()) {
-                try {
-                    var adjacentCell = cells.get(outsideCell.getId() + directionValue);
-                    if (adjacentCell.getIsInside() == MyBoolean.FALSE && !foundOutsideCells.contains(adjacentCell)) {
-                        foundOutsideCells.add(adjacentCell);
-                    }
-                } catch (Exception e) {
-                    continue;
+        for (int i = 0; i < foundOutsideCells.size(); i++) {
+            for (Cell adjacentCell : getAdjacentCells(foundOutsideCells.get(i))) {
+                if (adjacentCell.getIsInside() == MyBoolean.FALSE && !foundOutsideCells.contains(adjacentCell)) {
+                    foundOutsideCells.add(adjacentCell);
                 }
             }
         }
         return Settings.cellCount - insideCount == foundOutsideCells.size();
     }
 
-    public int calculateConsecutiveInsideCellsCount(Cell adjacentCell, Cell baseCell){
-        var count = 1;
-        var step = baseCell.getId() - adjacentCell.getId();
-        var nextAdjacentCell = adjacentCell;
-        while (true) {
-            // TODO make via boarders
-            if (!isNextCellValid(nextAdjacentCell, Settings.directions.entrySet().stream().filter(e -> e.getValue() == step).findFirst().get())) {
-                break;
-            }
-            nextAdjacentCell = cells.get(nextAdjacentCell.getId() + step);
-            if (nextAdjacentCell.getIsInside() == MyBoolean.TRUE) {
-                count++;
-            } else {
-                break;
-            }
-        }
-        return count;
+    public int calculateConsecutiveInsideCellsCount(Cell adjacentCell, Cell baseCell) {
+        return 0;
     }
 
-    public int getTotalWeight(ArrayList<Integer> weights){
+    public int getTotalWeight(ArrayList<Integer> weights) {
         var totalWeight = 0;
         for (var weight : weights) {
             totalWeight += weight;
@@ -268,7 +247,7 @@ public class Grid {
         return totalWeight;
     }
 
-    public Cell getRandomWeightedCell(HashMap<Cell, Integer> weightedCells){
+    public Cell getRandomWeightedCell(HashMap<Cell, Integer> weightedCells) {
         var totalWeight = getTotalWeight(new ArrayList<>(weightedCells.values()));
         var random = new Random();
         var randomWeight = random.nextInt(totalWeight);
@@ -283,17 +262,17 @@ public class Grid {
         return null;
     }
 
-    public ArrayList<Cell> getStartOutsideCells(){
-       var startOutsideCell = new ArrayList<Cell>();
-       for (var cell : cells) {
-           if (Settings.edgeIDs.contains(cell.getId()) && cell.getIsInside() == MyBoolean.TRUE) {
-               startOutsideCell.add(cell);
-           }
-       }
-       return startOutsideCell;
+    public ArrayList<Cell> getStartOutsideCells() {
+        var startOutsideCell = new ArrayList<Cell>();
+        for (Cell cell : cells) {
+            if (Settings.edgeIDs.contains(cell.getId()) && cell.getIsInside() == MyBoolean.FALSE) {
+                startOutsideCell.add(cell);
+            }
+        }
+        return startOutsideCell;
     }
 
-    public boolean isNextCellValid(Cell cell, Map.Entry<String, Integer> directionEntry){
+    public boolean isNextCellValid(Cell cell, Map.Entry<String, Integer> directionEntry) {
         // TODO make via Boarders if this is still necessary
         if (Settings.topIDs.contains(cell.getId()) && directionEntry.getKey().equals("top")) {
             return false;
@@ -310,40 +289,40 @@ public class Grid {
         return true;
     }
 
-    public void setNumberForAllCells(){
+    public void setNumberForAllCells() {
         for (Cell cell : cells) {
             cell.calcValue();
         }
 
     }
 
-    public boolean isSolved(){
+    public boolean isSolved() {
         for (Cell cell : cells) {
-            if (!cell.isCellCorrect()){
+            if (!cell.isCellCorrect()) {
                 return false;
             }
         }
         return true;
     }
 
-    public void setBoarder(Cell cell, Location location, MyBoolean state){
+    public void setBoarder(Cell cell, Location location, MyBoolean state) {
         cell.getBoarderByLocation(location).setState(state);
     }
 
-    public void setResultBoardersForAllCells(){
+    public void setResultBoardersForAllCells() {
         for (Cell cell : cells) {
             if (cell.getIsInside() == MyBoolean.TRUE) {
-               for (Location location : Location.values()) {
-                   var adjacentCell = getCellByBoarder(cell, location);
-                   if (adjacentCell == null || adjacentCell.getIsInside() == MyBoolean.FALSE) {
-                       cell.getBoarderByLocation(location).setResult(MyBoolean.TRUE);
-                   }
-               }
+                for (Location location : Location.values()) {
+                    var adjacentCell = getCellByBoarder(cell, location);
+                    if (adjacentCell == null || adjacentCell.getIsInside() == MyBoolean.FALSE) {
+                        cell.getBoarderByLocation(location).setResult(MyBoolean.TRUE);
+                    }
+                }
             }
         }
     }
 
-    public Cell getCellByBoarder(Cell cell, Location location){
+    public Cell getCellByBoarder(Cell cell, Location location) {
         var boarder = cell.getBoarderByLocation(location);
         var otherCellId = boarder.getOtherCellId(cell.getId());
         if (otherCellId == null) {
@@ -353,7 +332,7 @@ public class Grid {
     }
 
 
-    public void setCellsUnidentified(){
+    public void setCellsUnidentified() {
         for (Cell cell : cells) {
             cell.setIsInside(MyBoolean.NULL);
         }
