@@ -136,7 +136,6 @@ public class Ui extends Application {
     private void handleCellClick(Boarder boarder, javafx.scene.shape.Line line) {
         boarder.toggleBoarder();
         MyBoolean state = boarder.getState();
-        System.out.println(state.toString());
         switch (state) {
             case MyBoolean.TRUE:
                 line.setStrokeWidth(3);
@@ -149,7 +148,6 @@ public class Ui extends Application {
                 line.setFill(Color.RED);
                 break;
             case MyBoolean.NULL:
-                System.out.println("null");
                 line.setStrokeWidth(1);
                 line.setStroke(Color.GRAY);
                 line.setFill(Color.GRAY);
