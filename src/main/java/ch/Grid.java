@@ -93,8 +93,6 @@ public class Grid {
     public void initializeInsideCells() {
         Random random = new Random();
 
-        random.setSeed(2);
-
         var failCount = 0;
         var projectedInsideCellCount = Settings.cellCount * Settings.insidePercentage;
         var initialInsideCell = cells.get(random.nextInt(cells.size()));
@@ -213,7 +211,7 @@ public class Grid {
                     score -= 22;
                 }
             }
-            //score -= calculateConsecutiveInsideCellsCount(adjacentCell, baseCell);
+            score -= calculateConsecutiveInsideCellsCount(adjacentCell, baseCell);
             score += random.nextInt(5 - (-5)) + (-5);
 
             if (score < 0) {
@@ -239,8 +237,47 @@ public class Grid {
     }
 
     public int calculateConsecutiveInsideCellsCount(Cell adjacentCell, Cell baseCell) {
+        Location loc = getBorderLocationFromBaseToAdjacentCell(baseCell, adjacentCell);
+
+        if (loc != null) {
+            int count = 0;
+            Cell nextCell = baseCell;
+            while (nextCell.getIsInside() == MyBoolean.TRUE) {
+                count++;
+                nextCell = getCellByBoarder(nextCell, loc);
+                if (nextCell == null) {
+                    break;
+                }
+            }
+            loc = Location.getOppositeLocation(loc);
+            nextCell = baseCell;
+            while (nextCell.getIsInside() == MyBoolean.TRUE) {
+                count++;
+                nextCell = getCellByBoarder(nextCell, loc);
+                if (nextCell == null) {
+                    break;
+                }
+            }
+
+            return count * count;
+        }
         return 0;
     }
+
+    public Location getBorderLocationFromBaseToAdjacentCell(Cell baseCell, Cell adjacentCell) {
+        Location location = null;
+        for (var key : baseCell.getBoarders().keySet()){
+            Boarder border = baseCell.getBoarders().get(key);
+            for (Integer id: border.getCellIds()) {
+                if (adjacentCell.getId() == id) {
+                    location = key;
+                }
+            }
+        }
+        return location;
+    }
+
+
 
     public int getTotalWeight(ArrayList<Integer> weights) {
         var totalWeight = 0;

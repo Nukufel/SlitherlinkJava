@@ -11,4 +11,13 @@ public enum Location {
             case LEFT -> TOP;
         };
     }
+
+    public static Location getOppositeLocation(Location loc) {
+        return switch (loc) {
+            case TOP -> BOTTOM;
+            case RIGHT -> LEFT;
+            case BOTTOM -> TOP;
+            case LEFT -> RIGHT;
+        };
+    }
 }

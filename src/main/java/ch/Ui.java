@@ -48,12 +48,16 @@ public class Ui extends Application {
                 int y = row * cellSize;
 
                 StackPane rectWithText = new StackPane();
-                Text text = new Text(cell.getValue().toString() +" | ID: "+cell.getId());
+                Text text = new Text(cell.getValue().toString());
                 text.setFill(Color.WHITE);
+                if (!cell.getShowValue()){
+                    text.setText("hidden "+cell.getValue().toString());
+                }
+
 
                 Rectangle cellRect = new Rectangle(x, y, cellSize, cellSize);
                 if (cell.getIsInside() == MyBoolean.TRUE){
-                    cellRect.setFill(Color.LIGHTBLUE);
+                    cellRect.setFill(Color.DEEPPINK);
                 } else {
                     cellRect.setFill(Color.GREEN);
                 }
@@ -72,21 +76,17 @@ public class Ui extends Application {
                             if (y == 0) {
                                 group = addLine(x,y,x+cellSize,y, boarder, Location.TOP);
                             }
-                            break;
                         }
                         case Location.LEFT -> {
                             if (x == 0) {
                                 group = addLine(x,y,x,y+cellSize, boarder, Location.LEFT);
                             }
-                            break;
                         }
                         case Location.RIGHT -> {
                             group = addLine(x+cellSize, y,x+cellSize,y+cellSize, boarder, Location.RIGHT);
-                            break;
                         }
                         case Location.BOTTOM -> {
                             group = addLine(x,y+cellSize,x+cellSize,y+cellSize, boarder, Location.BOTTOM);
-                            break;
                         }
                     }
 
@@ -107,10 +107,6 @@ public class Ui extends Application {
         line.setStrokeWidth(1);
         line.setStroke(Color.GRAY);
         line.setFill(Color.GRAY);
-
-        if (boarder.getResult() == MyBoolean.TRUE){
-            line.setStroke(Color.DEEPPINK);
-        }
 
         Rectangle clickArea = createClickBox(x1, y1, x2, y2, loc);
         clickArea.setOnMouseClicked(event -> handleCellClick(boarder, line));
