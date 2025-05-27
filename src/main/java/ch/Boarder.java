@@ -50,7 +50,13 @@ public class Boarder implements Serializable {
     }
 
     public boolean isCorrect(){
-        return state == result;
+        if (result == MyBoolean.TRUE && state != MyBoolean.TRUE) {
+            return false;
+        }
+        if (state == MyBoolean.TRUE && result != MyBoolean.TRUE) {
+            return false;
+        }
+        return true;
     }
 
     public MyBoolean getResult() {
