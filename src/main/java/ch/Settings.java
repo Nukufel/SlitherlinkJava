@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Settings {
     public static int cellSize = 50;
-    public static int gridRows = 10, gridCols = 10;
+    public static int gridRows = 5, gridCols = 5;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
     public static HashMap<String, Integer> directions = calculateDirections();

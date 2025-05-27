@@ -6,7 +6,7 @@ public class Grid {
     private Stack<Action> actionStack = new Stack<>();
     private ArrayList<Cell> cells = new ArrayList<>();
     private ArrayList<Cell> insideCells = new ArrayList<>();
-    private ArrayList<Cell> removedCells = new ArrayList<>();
+    private ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
 
 
     public Grid() {
@@ -14,7 +14,7 @@ public class Grid {
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
-        //removeNumbers();
+        removeNumbers();
     }
 
     public Grid(Grid other) {
@@ -137,10 +137,11 @@ public class Grid {
         Grid copiedGrid = deepCopy();
         var solver = new Solver(copiedGrid, this);
 
-        for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
-            ArrayList<Cell> numbersToRemove = copiedGrid.removeNumber(solver, removeAmount);
-            if (!numbersToRemove.isEmpty()) {
-                for (Cell copiedCell : numbersToRemove) {
+        for (int i = 0; i < Math.pow(removeAmount, 10); i++) {
+            ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount);
+
+            if (cellsOfNumbersToRemove != null && !cellsOfNumbersToRemove.isEmpty()) {
+                for (Cell copiedCell : cellsOfNumbersToRemove) {
                     Cell cell = cells.get(copiedCell.getId());
                     cell.setShowValue(false);
                 }
@@ -148,52 +149,45 @@ public class Grid {
                 break;
             }
         }
+
         if (!isDone) {
             System.out.print("Failed to remove numbers, no unique solution");
         }
-
     }
 
     public ArrayList<Cell> removeNumber(Solver solver, int removeAmount) {
-        boolean fastRemove = false;
-
-
-        if (removeAmount > Settings.removeAmount - Settings.fastRemoveAmount) {
-            fastRemove = true;
-        }
-
-        if (removedCells.size() <= 0) {
-            return removedCells;
+        if (removeAmount <= 0) {
+            return cellsWithNumbersRemoved;
         }
 
         Cell randomNumberedCell = getRandomNumberedCell();
-        Integer number = randomNumberedCell.getValue();
-        randomNumberedCell.setShowValue(false);
+        Integer number =  randomNumberedCell.getValue();
 
-        removedCells.add(randomNumberedCell);
+        randomNumberedCell.setValue(null);
+        cellsWithNumbersRemoved.add(randomNumberedCell);
 
-        if (fastRemove || solver.hasSingleSolution()) {
-            if (!removeNumber(solver, removeAmount - 1).isEmpty()) {
-                return removedCells;
+        if (solver.hasSingleSolution()) {
+            if (removeNumber(solver, removeAmount - 1) != null) {
+                return cellsWithNumbersRemoved;
             }
         }
 
-        removedCells.remove(randomNumberedCell);
+        cellsWithNumbersRemoved.remove(randomNumberedCell);
         randomNumberedCell.setValue(number);
-        randomNumberedCell.setShowValue(true);
-        return removedCells;
+
+        return null;
 
     }
 
     public Cell getRandomNumberedCell() {
-        ArrayList<Cell> numberedCells = (ArrayList<Cell>) cells.stream().filter(x -> x.hasValue()).toList();
+        List<Cell> numberedCells = cells.stream().filter(x -> x.hasValue()).toList();
         return numberedCells.get(new Random().nextInt(numberedCells.size() - 1));
     }
 
     public ArrayList<Cell> getAdjacentCells(Cell cell) {
         var adjacentCells = new ArrayList<Cell>();
         for (Location location : Location.values()) {
-            var adjacentCell = getCellByBoarder(cell, location);
+            var adjacentCell = getCellByBoarderLocation(cell, location);
             if (adjacentCell != null) {
                 adjacentCells.add(adjacentCell);
             }
@@ -244,7 +238,7 @@ public class Grid {
             Cell nextCell = baseCell;
             while (nextCell.getIsInside() == MyBoolean.TRUE) {
                 count++;
-                nextCell = getCellByBoarder(nextCell, loc);
+                nextCell = getCellByBoarderLocation(nextCell, loc);
                 if (nextCell == null) {
                     break;
                 }
@@ -253,7 +247,7 @@ public class Grid {
             nextCell = baseCell;
             while (nextCell.getIsInside() == MyBoolean.TRUE) {
                 count++;
-                nextCell = getCellByBoarder(nextCell, loc);
+                nextCell = getCellByBoarderLocation(nextCell, loc);
                 if (nextCell == null) {
                     break;
                 }
@@ -311,28 +305,10 @@ public class Grid {
         return startOutsideCell;
     }
 
-    public boolean isNextCellValid(Cell cell, Map.Entry<String, Integer> directionEntry) {
-        // TODO make via Boarders if this is still necessary
-        if (Settings.topIDs.contains(cell.getId()) && directionEntry.getKey().equals("top")) {
-            return false;
-        }
-        if (Settings.rightIDs.contains(cell.getId()) && directionEntry.getKey().equals("right")) {
-            return false;
-        }
-        if (Settings.bottomIDs.contains(cell.getId()) && directionEntry.getKey().equals("bottom")) {
-            return false;
-        }
-        if (Settings.leftIDs.contains(cell.getId()) && directionEntry.getKey().equals("left")) {
-            return false;
-        }
-        return true;
-    }
-
     public void setNumberForAllCells() {
         for (Cell cell : cells) {
             cell.calcValue();
         }
-
     }
 
     public boolean isSolved() {
@@ -344,15 +320,11 @@ public class Grid {
         return true;
     }
 
-    public void setBoarder(Cell cell, Location location, MyBoolean state) {
-        cell.getBoarderByLocation(location).setState(state);
-    }
-
     public void setResultBoardersForAllCells() {
         for (Cell cell : cells) {
             if (cell.getIsInside() == MyBoolean.TRUE) {
                 for (Location location : Location.values()) {
-                    var adjacentCell = getCellByBoarder(cell, location);
+                    var adjacentCell = getCellByBoarderLocation(cell, location);
                     if (adjacentCell == null || adjacentCell.getIsInside() == MyBoolean.FALSE) {
                         cell.getBoarderByLocation(location).setResult(MyBoolean.TRUE);
                     }
@@ -361,7 +333,7 @@ public class Grid {
         }
     }
 
-    public Cell getCellByBoarder(Cell cell, Location location) {
+    public Cell getCellByBoarderLocation(Cell cell, Location location) {
         var boarder = cell.getBoarderByLocation(location);
         var otherCellId = boarder.getOtherCellId(cell.getId());
         if (otherCellId == null) {
@@ -386,12 +358,12 @@ public class Grid {
         this.actionStack = actionStack;
     }
 
-    public ArrayList<Cell> getRemovedCells() {
-        return removedCells;
+    public ArrayList<Cell> getCellsWithNumbersRemoved() {
+        return cellsWithNumbersRemoved;
     }
 
-    public void setRemovedCells(ArrayList<Cell> removedCells) {
-        this.removedCells = removedCells;
+    public void setCellsWithNumbersRemoved(ArrayList<Cell> cellsWithNumbersRemoved) {
+        this.cellsWithNumbersRemoved = cellsWithNumbersRemoved;
     }
 
     public ArrayList<Cell> getInsideCells() {
