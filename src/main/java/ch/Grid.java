@@ -40,14 +40,15 @@ public class Grid {
             var cell = new Cell(i);
 
             if (cell.getId() == 0) {
-                makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
+                boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
+
             } else if (Settings.topIDs.contains(cell.getId())) {
                 var lastCell = cells.getLast();
                 var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
                 sharedBoarder.addCellId(cell.getId());
                 cell.addBoarder(Location.LEFT, sharedBoarder);
 
-                makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
+                boarderCount +=  makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
 
             } else if (Settings.leftIDs.contains(cell.getId())) {
                 var cellAbove = cells.get(cell.getId() - Settings.gridCols);
@@ -55,7 +56,7 @@ public class Grid {
                 sharedBoarder.addCellId(cell.getId());
                 cell.addBoarder(Location.TOP, sharedBoarder);
 
-                makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
+                boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
 
             } else {
 
@@ -69,7 +70,7 @@ public class Grid {
                 sharedBoarder2.addCellId(cell.getId());
                 cell.addBoarder(Location.TOP, sharedBoarder2);
 
-                makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
+                boarderCount +=  makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
 
             }
             cells.add(cell);
@@ -77,7 +78,7 @@ public class Grid {
         }
     }
 
-    public void makeNewBoardersForCell(Cell cell, int boarderCount, Location startLocation, int amountOfNewBoarders) {
+    public int makeNewBoardersForCell(Cell cell, int boarderCount, Location startLocation, int amountOfNewBoarders) {
         Location loc = startLocation;
         for (int h = 0; h < amountOfNewBoarders; h++) {
             var boarder = new Boarder(boarderCount);
@@ -86,6 +87,7 @@ public class Grid {
             boarderCount++;
             loc = Location.getNext(loc);
         }
+        return boarderCount;
     }
 
     public void initializeInsideCells() {

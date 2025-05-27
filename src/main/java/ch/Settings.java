@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Settings {
     public static int cellSize = 100;
-    public static int gridRows = 2, gridCols = 2;
+    public static int gridRows = 5, gridCols = 5;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
     public static HashMap<String, Integer> directions = calculateDirections();
@@ -64,7 +64,7 @@ public class Settings {
 
     public static ArrayList<Integer> calculateRightIDs() {
         var rightIDs = new ArrayList<Integer>();
-        for (int i = 1; i < gridRows - 1; i++) {
+        for (int i = 0; i < gridRows; i++) {
             rightIDs.add(i * gridCols + gridCols - 1);
         }
         return rightIDs;
@@ -80,7 +80,7 @@ public class Settings {
 
     public static ArrayList<Integer> calculateLeftIDs() {
         var leftIDs = new ArrayList<Integer>();
-        for (int i = 1; i < gridRows - 1; i++) {
+        for (int i = 0; i < gridRows; i++) {
             leftIDs.add(i * gridCols);
         }
         return leftIDs;

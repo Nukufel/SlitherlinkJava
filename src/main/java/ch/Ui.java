@@ -47,10 +47,10 @@ public class Ui extends Application {
                 int x = col * cellSize;
                 int y = row * cellSize;
 
-                // Draw the cell background
                 StackPane rectWithText = new StackPane();
-                Text text = new Text(cell.getValue().toString());
+                Text text = new Text(cell.getValue().toString() +" | ID: "+cell.getId());
                 text.setFill(Color.WHITE);
+
                 Rectangle cellRect = new Rectangle(x, y, cellSize, cellSize);
                 if (cell.getIsInside() == MyBoolean.TRUE){
                     cellRect.setFill(Color.LIGHTBLUE);
@@ -61,7 +61,6 @@ public class Ui extends Application {
                 rectWithText.getChildren().addAll(cellRect, text);
                 rectWithText.relocate(x, y);
                 rects.getChildren().add(rectWithText);
-
 
                 // --- Draw boarders for this cell ---
                 for (Location loc : cell.getBoarders().keySet()) {
@@ -113,8 +112,14 @@ public class Ui extends Application {
             line.setStroke(Color.DEEPPINK);
         }
 
-        // Create a transparent Rectangle as the click target
-        double thickness = 30.0; // "clickable" width
+        Rectangle clickArea = createClickBox(x1, y1, x2, y2, loc);
+        clickArea.setOnMouseClicked(event -> handleCellClick(boarder, line));
+
+        return new Group(line, clickArea);
+    }
+
+    private Rectangle createClickBox(Integer x1, Integer y1, Integer x2, Integer y2, Location loc) {
+        double thickness = 30.0;
 
         Rectangle clickArea;
         if (loc == Location.TOP || loc == Location.BOTTOM) {
@@ -124,11 +129,8 @@ public class Ui extends Application {
         }
 
         clickArea.setFill(Color.TRANSPARENT);
-        clickArea.setOnMouseClicked(event -> handleCellClick(boarder, line));
 
-        // Group both so they're treated as one entity
-
-        return new Group(line, clickArea);
+        return clickArea;
     }
 
 
@@ -152,6 +154,9 @@ public class Ui extends Application {
                 line.setStroke(Color.GRAY);
                 line.setFill(Color.GRAY);
                 break;
+        }
+        if (gameGrid.isSolved()){
+            System.out.println("Solved");
         }
 
     }
