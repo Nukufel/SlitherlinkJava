@@ -57,9 +57,9 @@ public class Ui extends Application {
 
                 Rectangle cellRect = new Rectangle(x, y, cellSize, cellSize);
                 if (cell.getIsInside() == MyBoolean.TRUE){
-                    cellRect.setFill(Color.DEEPPINK);
+                    cellRect.setFill(Color.LIGHTPINK);
                 } else {
-                    cellRect.setFill(Color.GREEN);
+                    cellRect.setFill(Color.LIGHTGREEN);
                 }
 
                 rectWithText.getChildren().addAll(cellRect, text);

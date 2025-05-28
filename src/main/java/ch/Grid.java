@@ -175,6 +175,7 @@ public class Grid {
         cellsWithNumbersRemoved.remove(randomNumberedCell);
         randomNumberedCell.setValue(number);
 
+
         return null;
 
     }
@@ -347,6 +348,16 @@ public class Grid {
         for (Cell cell : cells) {
             cell.setIsInside(MyBoolean.NULL);
         }
+    }
+
+    public ArrayList<Cell> getUnidentifiedCells() {
+        var unidentifiedCells = new ArrayList<Cell>();
+        for (Cell cell : cells) {
+            if (cell.getIsInside() == MyBoolean.NULL) {
+                unidentifiedCells.add(cell);
+            }
+        }
+        return unidentifiedCells;
     }
 
 
