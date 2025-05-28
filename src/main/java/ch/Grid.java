@@ -137,7 +137,7 @@ public class Grid {
         var solver = new Solver(copiedGrid, this);
 
         for (int i = 0; i < Math.pow(removeAmount, 10); i++) {
-            ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount);
+            ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null);
 
             if (cellsOfNumbersToRemove != null && !cellsOfNumbersToRemove.isEmpty()) {
                 for (Cell copiedCell : cellsOfNumbersToRemove) {
@@ -154,19 +154,19 @@ public class Grid {
         }
     }
 
-    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount) {
+    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount, Cell lastCell) {
         if (removeAmount <= 0) {
             return cellsWithNumbersRemoved;
         }
 
-        Cell randomNumberedCell = getRandomNumberedCell();
+        Cell randomNumberedCell = getRandomNumberedCell(lastCell);
         Integer number =  randomNumberedCell.getValue();
 
         randomNumberedCell.setValue(null);
         cellsWithNumbersRemoved.add(randomNumberedCell);
 
         if (solver.hasSingleSolution()) {
-            if (removeNumber(solver, removeAmount - 1) != null) {
+            if (removeNumber(solver, removeAmount - 1, randomNumberedCell) != null) {
                 return cellsWithNumbersRemoved;
             }
         }
@@ -179,9 +179,13 @@ public class Grid {
 
     }
 
-    public Cell getRandomNumberedCell() {
+    public Cell getRandomNumberedCell(Cell lastCell) {
         List<Cell> numberedCells = cells.stream().filter(x -> x.hasValue()).toList();
-        return numberedCells.get(rand.nextInt(numberedCells.size() - 1));
+        Cell cell = numberedCells.get(rand.nextInt(numberedCells.size() - 1));
+        if (lastCell != null && cell.getId() == lastCell.getId() && numberedCells.size() > 1) {
+            return getRandomNumberedCell(lastCell);
+        }
+        return cell;
     }
 
     public ArrayList<Cell> getAdjacentCells(Cell cell) {

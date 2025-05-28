@@ -17,27 +17,29 @@ public class Solver {
         while (scoutPatterns()) {
             continue;
         }
-        ArrayList<Cell> unidentifiedCells = grid.getUnidentifiedCells();
-        return !isSolvableAndNotUnique(unidentifiedCells);
+        ArrayList<Cell> unidentifiedCells = grid.getCopyOfCells();
+        return !hasSecondSolution(unidentifiedCells);
     }
 
-    private boolean isSolvableAndNotUnique(ArrayList<Cell> unidentifiedCells) {
-        //TODO dose not finde unique solution (finds the original solution)
+    private boolean hasSecondSolution(ArrayList<Cell> unidentifiedCells) {
         MyBoolean[] statesToCheck = {MyBoolean.TRUE, MyBoolean.FALSE};
         if (unidentifiedCells.isEmpty()) {
             return true;
         }
 
-        Cell cell = unidentifiedCells.getFirst();
-        unidentifiedCells.remove(cell);
+        Cell cell = unidentifiedCells.removeFirst();
 
         for (MyBoolean value : statesToCheck) {
             cell.setIsInside(value);
             if (isPossibleSolution(cell) && !isOriginalSolution()){
-                return isSolvableAndNotUnique(unidentifiedCells);
+                if (hasSecondSolution(unidentifiedCells)) {
+                    return true;
+                }
             }
         }
 
+        cell.setIsInside(MyBoolean.NULL);
+        unidentifiedCells.add(cell);
         return false;
     }
 
