@@ -7,6 +7,7 @@ public class Grid {
     private ArrayList<Cell> cells = new ArrayList<>();
     private ArrayList<Cell> insideCells = new ArrayList<>();
     private ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
+    private Random rand = Settings.rand;
 
 
     public Grid() {
@@ -91,22 +92,20 @@ public class Grid {
     }
 
     public void initializeInsideCells() {
-        Random random = new Random();
-
         var failCount = 0;
         var projectedInsideCellCount = Settings.cellCount * Settings.insidePercentage;
-        var initialInsideCell = cells.get(random.nextInt(cells.size()));
+        var initialInsideCell = cells.get(rand.nextInt(cells.size()));
 
         initialInsideCell.setIsInside(MyBoolean.TRUE);
         insideCells.add(initialInsideCell);
 
 
         while (insideCells.size() < projectedInsideCellCount && failCount < Settings.failCount) {
-            var randomInsideCell = insideCells.get(random.nextInt(insideCells.size()));
+            var randomInsideCell = insideCells.get(rand.nextInt(insideCells.size()));
 
             var adjacentCells = getAdjacentCells(randomInsideCell);
-            var weights = weightCell(adjacentCells, randomInsideCell, random);
-            var adjacentWeightedCells = new HashMap<Cell, Integer>();
+            var weights = weightCell(adjacentCells, randomInsideCell);
+            var adjacentWeightedCells = new LinkedHashMap<Cell, Integer>();
 
             for (int i = 0; i < adjacentCells.size(); i++) {
                 if (weights.get(i) > 50) {
@@ -115,7 +114,7 @@ public class Grid {
             }
 
             if (!adjacentWeightedCells.isEmpty()) {
-                var randomWeightedCell = getRandomWeightedCell(adjacentWeightedCells, random);
+                var randomWeightedCell = getRandomWeightedCell(adjacentWeightedCells);
                 if (!insideCells.contains(randomWeightedCell)) {
                     randomWeightedCell.setIsInside(MyBoolean.TRUE);
                     if (allConnected(insideCells.size() + 1)) {
@@ -182,7 +181,7 @@ public class Grid {
 
     public Cell getRandomNumberedCell() {
         List<Cell> numberedCells = cells.stream().filter(x -> x.hasValue()).toList();
-        return numberedCells.get(new Random().nextInt(numberedCells.size() - 1));
+        return numberedCells.get(rand.nextInt(numberedCells.size() - 1));
     }
 
     public ArrayList<Cell> getAdjacentCells(Cell cell) {
@@ -196,7 +195,7 @@ public class Grid {
         return adjacentCells;
     }
 
-    public ArrayList<Integer> weightCell(ArrayList<Cell> adjacentCells, Cell baseCell, Random random) {
+    public ArrayList<Integer> weightCell(ArrayList<Cell> adjacentCells, Cell baseCell) {
         var weights = new ArrayList<Integer>();
         for (Cell adjacentCell : adjacentCells) {
             var score = 100;
@@ -207,7 +206,7 @@ public class Grid {
                 }
             }
             score -= calculateConsecutiveInsideCellsCount(adjacentCell, baseCell);
-            score += random.nextInt(5 - (-5)) + (-5);
+            score += rand.nextInt(5 - (-5)) + (-5);
 
             if (score < 0) {
                 score = 0;
@@ -282,9 +281,9 @@ public class Grid {
         return totalWeight;
     }
 
-    public Cell getRandomWeightedCell(HashMap<Cell, Integer> weightedCells, Random random) {
+    public Cell getRandomWeightedCell(LinkedHashMap<Cell, Integer> weightedCells) {
         var totalWeight = getTotalWeight(new ArrayList<>(weightedCells.values()));
-        var randomWeight = random.nextInt(totalWeight);
+        var randomWeight = rand.nextInt(totalWeight);
         var currentWeight = 0;
 
         for (var cell : weightedCells.keySet()) {
@@ -358,6 +357,10 @@ public class Grid {
             }
         }
         return unidentifiedCells;
+    }
+
+    public ArrayList<Cell> getCopyOfCells(){
+        return new ArrayList<>(cells);
     }
 
 

@@ -3,13 +3,14 @@ package ch;
 import java.util.*;
 
 public class Settings {
+    public static Random rand = new Random(2);
     public static int cellSize = 50;
     public static int gridRows = 5, gridCols = 5;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
-    public static HashMap<String, Integer> directions = calculateDirections();
+    public static LinkedHashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
-    public static float insidePercentage = calculateInsidePercentage();
+    public static float insidePercentage = calculateInsidePercentage(rand);
     public static int removeAmount = (int) (cellCount * 0.4);
     public static int fastRemoveAmount = (int) (cellCount * 0.4);
     public static ArrayList<Integer> cornerIDs = calculateCornerIds();
@@ -28,8 +29,8 @@ public class Settings {
         return myList;
     }
 
-    public static HashMap<String, Integer> calculateDirections(){
-        var myMap = new HashMap<String, Integer>();
+    public static LinkedHashMap<String, Integer> calculateDirections(){
+        var myMap = new LinkedHashMap<String, Integer>();
         myMap.put("top", -gridRows);
         myMap.put("right", 1);
         myMap.put("bottom", gridRows);
@@ -37,10 +38,8 @@ public class Settings {
         return myMap;
     }
 
-    public static float calculateInsidePercentage()
-    {
-        Random random = new Random();
-        return (random.nextFloat(insidePercentageRange[1] - insidePercentageRange[0] + 1) + insidePercentageRange[0]) / 100;
+    public static float calculateInsidePercentage(Random rand) {
+        return (rand.nextFloat(insidePercentageRange[1] - insidePercentageRange[0] + 1) + insidePercentageRange[0]) / 100;
     }
 
     public static ArrayList<Integer> calculateEdgeIDs() {

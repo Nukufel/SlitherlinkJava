@@ -1,6 +1,7 @@
 package ch;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Cell {
     private int id;
@@ -8,7 +9,7 @@ public class Cell {
     private Integer value;
     private Boolean showValue;
 
-    private HashMap<Location, Boarder> boarders = new HashMap<>();
+    private LinkedHashMap<Location, Boarder> boarders = new LinkedHashMap<>();
 
     public Cell(int id) {
         this.id = id;
@@ -23,7 +24,7 @@ public class Cell {
         this.isInside = other.isInside; // Assuming MyBoolean is immutable
 
         // Deep copy of the boarders map
-        this.boarders = new HashMap<>();
+        this.boarders = new LinkedHashMap<>();
         for (Location loc : other.boarders.keySet()) {
             Boarder originalBoarder = other.boarders.get(loc);
             this.boarders.put(loc, new Boarder(originalBoarder)); // Assuming Boarder has a copy constructor
@@ -50,11 +51,11 @@ public class Cell {
         this.isInside = isInside;
     }
 
-    public HashMap<Location, Boarder> getBoarders() {
+    public LinkedHashMap<Location, Boarder> getBoarders() {
         return boarders;
     }
 
-    public void setBoarders(HashMap<Location, Boarder> boarders) {
+    public void setBoarders(LinkedHashMap<Location, Boarder> boarders) {
         this.boarders = boarders;
     }
 
