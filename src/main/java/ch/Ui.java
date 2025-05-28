@@ -2,6 +2,7 @@ package ch;
 
 import javafx.application.Application;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -50,17 +51,23 @@ public class Ui extends Application {
                 StackPane rectWithText = new StackPane();
                 Text text = new Text(cell.getValue().toString());
                 text.setFill(Color.WHITE);
+
                 if (!cell.getShowValue()){
-                    text.setText("hidden "+cell.getValue().toString());
+                    //text.setText("hidden "+cell.getValue().toString());
+                    text.setText("");
                 }
 
 
+
                 Rectangle cellRect = new Rectangle(x, y, cellSize, cellSize);
+                /**
                 if (cell.getIsInside() == MyBoolean.TRUE){
                     cellRect.setFill(Color.LIGHTPINK);
                 } else {
                     cellRect.setFill(Color.LIGHTGREEN);
                 }
+                 */
+
 
                 rectWithText.getChildren().addAll(cellRect, text);
                 rectWithText.relocate(x, y);
@@ -108,14 +115,35 @@ public class Ui extends Application {
         line.setStroke(Color.GRAY);
         line.setFill(Color.GRAY);
 
-        Rectangle clickArea = createClickBox(x1, y1, x2, y2, loc);
-        clickArea.setOnMouseClicked(event -> handleCellClick(boarder, line));
+        Group x = createX(line, loc);
 
-        return new Group(line, clickArea);
+        Rectangle clickArea = createClickBox(x1, y1, x2, y2, loc);
+        clickArea.setOnMouseClicked(event -> handleCellClick(boarder, line, x));
+
+        return new Group(line, x, clickArea);
+    }
+
+    public Group createX(Line line, Location loc) {
+        int halveCellSize = cellSize / 2;
+        int crossOffset = cellSize / 12;
+
+        if (loc == Location.TOP || loc == Location.BOTTOM) {
+            Line x1 = new Line(line.getStartX() + halveCellSize - crossOffset , line.getStartY() - crossOffset, line.getEndX() - halveCellSize + crossOffset, line.getEndY() + crossOffset);
+            Line x2 = new Line(line.getStartX() + halveCellSize - crossOffset, line.getStartY() + crossOffset, line.getEndX() - halveCellSize + crossOffset, line.getEndY() - crossOffset);
+            x1.setStroke(Color.TRANSPARENT);
+            x2.setStroke(Color.TRANSPARENT);
+            return new Group(x1, x2);
+        } else {
+            Line x1 = new Line(line.getStartX() + crossOffset, line.getStartY() + halveCellSize - crossOffset, line.getEndX() - crossOffset, line.getEndY() - halveCellSize + crossOffset);
+            Line x2 = new Line(line.getStartX() - crossOffset, line.getStartY() + halveCellSize - crossOffset, line.getEndX() + crossOffset, line.getEndY() - halveCellSize + crossOffset);
+            x1.setStroke(Color.TRANSPARENT);
+            x2.setStroke(Color.TRANSPARENT);
+            return new Group(x1, x2);
+        }
     }
 
     private Rectangle createClickBox(Integer x1, Integer y1, Integer x2, Integer y2, Location loc) {
-        double thickness = 30.0;
+        double thickness = cellSize / 2;
 
         Rectangle clickArea;
         if (loc == Location.TOP || loc == Location.BOTTOM) {
@@ -123,15 +151,16 @@ public class Ui extends Application {
         } else {
             clickArea = new Rectangle(x1 - thickness/2, y1, thickness, cellSize);
         }
-
         clickArea.setFill(Color.TRANSPARENT);
+        clickArea.setArcWidth(thickness * 2);
+        clickArea.setArcHeight(thickness * 2);
 
         return clickArea;
     }
 
 
 
-    private void handleCellClick(Boarder boarder, javafx.scene.shape.Line line) {
+    private void handleCellClick(Boarder boarder, javafx.scene.shape.Line line, Group xGroup) {
         boarder.toggleBoarder();
         MyBoolean state = boarder.getState();
         switch (state) {
@@ -139,16 +168,20 @@ public class Ui extends Application {
                 line.setStrokeWidth(3);
                 line.setStroke(Color.BLUE);
                 line.setFill(Color.BLUE);
+                setXs(xGroup, false);
                 break;
             case MyBoolean.FALSE:
                 line.setStrokeWidth(1);
-                line.setStroke(Color.RED);
-                line.setFill(Color.RED);
+                line.setStroke(Color.GRAY);
+                line.setFill(Color.GRAY);
+                setXs(xGroup, true);
                 break;
             case MyBoolean.NULL:
                 line.setStrokeWidth(1);
                 line.setStroke(Color.GRAY);
                 line.setFill(Color.GRAY);
+
+                setXs(xGroup, false);
                 break;
         }
         if (gameGrid.isSolved()){
@@ -156,6 +189,19 @@ public class Ui extends Application {
         }
 
     }
+
+    public void setXs(Group group, boolean state) {
+        for (Node x : group.getChildren()){
+            if (x.getClass() == Line.class){
+                if (state){
+                    ((Line) x).setStroke(Color.RED);
+                } else {
+                    ((Line) x).setStroke(Color.TRANSPARENT);
+                }
+            }
+        }
+    }
+
 
     public static int rowColToId(int row, int col) {
         return row * Settings.gridRows + col;

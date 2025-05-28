@@ -10,7 +10,7 @@ public class Settings {
     public static HashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage();
-    public static int removeAmount = (int) (cellCount * 0.3);
+    public static int removeAmount = (int) (cellCount * 0.4);
     public static int fastRemoveAmount = (int) (cellCount * 0.4);
     public static ArrayList<Integer> cornerIDs = calculateCornerIds();
     public static ArrayList<Integer> edgeIDs = calculateEdgeIDs();

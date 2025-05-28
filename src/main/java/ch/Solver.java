@@ -22,6 +22,7 @@ public class Solver {
     }
 
     private boolean isSolvableAndNotUnique(ArrayList<Cell> unidentifiedCells) {
+        //TODO dose not finde unique solution (finds the original solution)
         MyBoolean[] statesToCheck = {MyBoolean.TRUE, MyBoolean.FALSE};
         if (unidentifiedCells.isEmpty()) {
             return true;
