@@ -30,6 +30,8 @@ public class Solver {
         Cell cell = unidentifiedCells.getFirst();
         ArrayList<Cell> remainingCells = new ArrayList<>(unidentifiedCells.subList(1, unidentifiedCells.size()));
 
+        //TODO maybe scout for patterns and get a new list (reverting at failing is hard)
+
         for (MyBoolean value : statesToCheck) {
             cell.setIsInside(value);
             if (isPossibleSolution(cell)){
@@ -303,11 +305,23 @@ public class Solver {
         }
 
         if (Settings.edgeIDs.contains(cell.getId()) && cell.getIsInside() == MyBoolean.NULL) {
+            int inside2s = 0;
             for (Cell adjacentCell : adjacentCells) {
                 if (adjacentCell.getValue() != null && adjacentCell.getValue() == 1 && Settings.edgeIDs.contains(adjacentCell.getId()) && adjacentCell.getIsInside() == MyBoolean.NULL) {
                     cell.setIsInside(MyBoolean.TRUE);
                     changed = true;
                     break;
+                }
+
+                if (Settings.edgeIDs.contains(adjacentCell.getId()) && adjacentCell.getIsInside() == MyBoolean.TRUE &&
+                        adjacentCell.getValue() != null && adjacentCell.getValue() == 2) {
+                    inside2s++;
+                }
+
+                if (inside2s == 2){
+                    if (outsideEdge3Pattern(cell, adjacentCells)) {
+                        changed = true;
+                    }
                 }
             }
         }
@@ -335,6 +349,23 @@ public class Solver {
             }
         }
 
+        return changed;
+    }
+
+    private boolean outsideEdge3Pattern(Cell cell, ArrayList<Cell> adjacentCells) {
+        boolean changed = false;
+        for (Cell adjacentCell2 : adjacentCells) {
+            if (adjacentCell2.getIsInside() == MyBoolean.NULL) {
+                adjacentCell2.setIsInside(MyBoolean.TRUE);
+                changed = true;
+            }
+        }
+        for (Cell diagonalCell : getDiagonalCells(cell)) {
+            if (diagonalCell.getIsInside() == MyBoolean.NULL) {
+                diagonalCell.setIsInside(MyBoolean.TRUE);
+                changed = true;
+            }
+        }
         return changed;
     }
 
