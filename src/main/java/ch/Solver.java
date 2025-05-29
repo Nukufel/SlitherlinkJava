@@ -134,7 +134,7 @@ public class Solver {
             ArrayList<Cell> adjacentCells = grid.getAdjacentCells(cell);
 
             if (cell.getValue() == null) {
-                changed = scoutNullPatterns(cell);
+                changed = scoutNullPatterns(cell, adjacentCells);
             }else if (cell.getValue() == 0) {
                 changed = scout0Patterns(cell, adjacentCells);
             }else if (cell.getValue() == 1) {
@@ -148,18 +148,36 @@ public class Solver {
         return changed;
     }
 
-    private boolean scoutNullPatterns(Cell cell) {
+    private boolean scoutNullPatterns(Cell cell, ArrayList<Cell> adjacentCells) {
         boolean changed = false;
-        ArrayList<Integer> counts = countAdjacentInAndOutsideCells(cell);
-        int outsideCount = counts.get(0);
-        int insideCount = counts.get(1);
-        if (outsideCount == 4) {
-            cell.setIsInside(MyBoolean.FALSE);
-            changed = true;
-        }
-        if (insideCount == 4) {
-            cell.setIsInside(MyBoolean.TRUE);
-            changed = true;
+        if (cell.getIsInside() == MyBoolean.NULL) {
+            ArrayList<Integer> counts = countAdjacentInAndOutsideCells(cell);
+            int outsideCount = counts.get(0);
+            int insideCount = counts.get(1);
+
+            if (Settings.cornerIDs.contains(cell.getId())){
+                if (outsideCount - adjacentCells.size() >= 2){
+                    cell.setIsInside(MyBoolean.FALSE);
+                    changed = true;
+                }
+            }
+
+            if (Settings.edgeIDs.contains(cell.getId())){
+                if (outsideCount - adjacentCells.size() >= 3){
+                    cell.setIsInside(MyBoolean.FALSE);
+                    changed = true;
+                }
+            }
+
+
+
+            if (outsideCount == 4) {
+                cell.setIsInside(MyBoolean.FALSE);
+                changed = true;
+            } else if (insideCount == 4) {
+                cell.setIsInside(MyBoolean.TRUE);
+                changed = true;
+            }
         }
         return changed;
     }
@@ -216,9 +234,20 @@ public class Solver {
 
         if (Settings.edgeIDs.contains(cell.getId()) && cell.getIsInside() != MyBoolean.NULL) {
             for (Cell adjacentCell : adjacentCells) {
-                if (adjacentCell.getValue() != null && adjacentCell.getValue() == 1 && Settings.edgeIDs.contains(adjacentCell.getId()) && adjacentCell.getIsInside() == MyBoolean.NULL) {
-                    adjacentCell.setIsInside(cell.getIsInside());
+                if (cell.getIsInside() == MyBoolean.TRUE && adjacentCell.getIsInside() == MyBoolean.NULL) {
+                    adjacentCell.setIsInside(MyBoolean.TRUE);
                     changed = true;
+                }
+                if (adjacentCell.getValue() != null && adjacentCell.getValue() == 1 && Settings.edgeIDs.contains(adjacentCell.getId())) {
+                    if (cell.getIsInside() == MyBoolean.NULL || adjacentCell.getIsInside() == MyBoolean.NULL) {
+                        if (cell.getIsInside() == MyBoolean.FALSE) {
+                            adjacentCell.setIsInside(MyBoolean.FALSE);
+                            changed = true;
+                        } else if (adjacentCell.getIsInside() == MyBoolean.FALSE) {
+                            cell.setIsInside(MyBoolean.FALSE);
+                            changed = true;
+                        }
+                    }
                 }
             }
         }
@@ -230,6 +259,10 @@ public class Solver {
         boolean changed = false;
 
         if (Settings.cornerIDs.contains(cell.getId()) ) {
+            if (cell.getIsInside() != MyBoolean.NULL) {
+                colorAdjacentCells(cell, MyBoolean.TRUE);
+            }
+
             for (Cell adjacentCell : adjacentCells) {
                 if (adjacentCell.getIsInside() == MyBoolean.NULL || cell.getIsInside() == MyBoolean.NULL) {
                     if (adjacentCell.getValue() != null && adjacentCell.getValue() == 1) {
@@ -249,6 +282,10 @@ public class Solver {
                         changed = true;
                         break;
                     }
+                }
+
+                if (cell.getIsInside() == MyBoolean.FALSE) {
+                    diagonalCell.setIsInside(MyBoolean.TRUE);
                 }
             }
         }
@@ -297,14 +334,6 @@ public class Solver {
                 }
             }
         }
-
-        /**
-         * for (Cell adjacentCell : adjacentCells) {
-         *                 if (adjacentCell.getValue() == 3) {
-         *                     changed2 = colorAdjacentCells(adjacentCell, MyBoolean.switchMyBool(adjacentCell.getIsInside()));
-         *                 }
-         *             }
-         */
 
         return changed;
     }

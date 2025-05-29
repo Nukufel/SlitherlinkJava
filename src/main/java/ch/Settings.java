@@ -11,7 +11,7 @@ public class Settings {
     public static LinkedHashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
-    public static int removeAmount = (int) (cellCount * 0.6);
+    public static int removeAmount = (int) (cellCount * 0.4);
     public static int fastRemoveAmount = (int) (removeAmount * 0.4);
     public static ArrayList<Integer> cornerIDs = calculateCornerIds();
     public static ArrayList<Integer> edgeIDs = calculateEdgeIDs();
