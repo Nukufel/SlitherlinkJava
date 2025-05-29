@@ -136,7 +136,7 @@ public class Grid {
         Grid copiedGrid = deepCopy();
         var solver = new Solver(copiedGrid, this);
 
-        for (int i = 0; i < Math.pow(removeAmount, 10); i++) {
+        for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
             ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null);
 
             if (cellsOfNumbersToRemove != null && !cellsOfNumbersToRemove.isEmpty()) {

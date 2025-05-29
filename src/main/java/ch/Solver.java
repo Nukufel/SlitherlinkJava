@@ -17,22 +17,23 @@ public class Solver {
         while (scoutPatterns()) {
             continue;
         }
-        ArrayList<Cell> unidentifiedCells = grid.getCopyOfCells();
+        ArrayList<Cell> unidentifiedCells = grid.getUnidentifiedCells();
         return !hasSecondSolution(unidentifiedCells);
     }
 
     private boolean hasSecondSolution(ArrayList<Cell> unidentifiedCells) {
         MyBoolean[] statesToCheck = {MyBoolean.TRUE, MyBoolean.FALSE};
         if (unidentifiedCells.isEmpty()) {
-            return true;
+            return !isOriginalSolution() && isGridValid();
         }
 
-        Cell cell = unidentifiedCells.removeFirst();
+        Cell cell = unidentifiedCells.getFirst();
+        ArrayList<Cell> remainingCells = new ArrayList<>(unidentifiedCells.subList(1, unidentifiedCells.size()));
 
         for (MyBoolean value : statesToCheck) {
             cell.setIsInside(value);
-            if (isPossibleSolution(cell) && !isOriginalSolution()){
-                if (hasSecondSolution(unidentifiedCells)) {
+            if (isPossibleSolution(cell)){
+                if (hasSecondSolution(remainingCells)) {
                     return true;
                 }
             }
@@ -45,7 +46,23 @@ public class Solver {
 
     private boolean isOriginalSolution() {
         for (Cell cell : grid.getCells()) {
-            if (cell.getIsInside() != originalGrid.getCells().get(cell.getId()).getIsInside()) return false;
+            for (Cell originalCell : originalGrid.getCells()){
+                if (cell.getId() == originalCell.getId()){
+                    if (!cell.getIsInside().equals(originalCell.getIsInside())){
+                        return false;
+                    }
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isGridValid() {
+        for (Cell cell : grid.getCells()) {
+            if (!isPossibleSolution(cell)) {
+                return false;
+            }
         }
         return true;
     }
@@ -60,23 +77,32 @@ public class Solver {
              int outsideCount = counts.get(0);
              int insideCount = counts.get(1);
 
-             if (adjecentCell.getValue() != null) {
-                 if (adjecentCell.getIsInside() == MyBoolean.FALSE) {
+             if (adjecentCell.getIsInside() == MyBoolean.FALSE) {
+                 if (adjecentCell.getValue() != null) {
                      if (adjecentCell.getValue() == 3 && outsideCount > 1) return false;
                      if (adjecentCell.getValue() == 1 && insideCount > 1) return false;
                      if (adjecentCell.getValue() == 0 && insideCount > 0) return false;
-                 } else if (adjecentCell.getIsInside() == MyBoolean.TRUE) {
+                 }
+                 if (insideCount >= 4) return false;
+             } else if (adjecentCell.getIsInside() == MyBoolean.TRUE) {
+                 if (adjecentCell.getValue() != null) {
                      if (adjecentCell.getValue() == 3 && insideCount > 1) return false;
                      if (adjecentCell.getValue() == 1 && outsideCount > 1) return false;
                      if (adjecentCell.getValue() == 0 && outsideCount > 0) return false;
-                 } else {
-                     if ((adjecentCell.getValue() == 1 || adjecentCell.getValue() == 3) && ((outsideCount > 1 && insideCount > 1) || outsideCount > 3 || insideCount > 3))
+                 }
+                 if (outsideCount >= 4) return false;
+             } else {
+                 //TODO ???
+                 if (adjecentCell.getValue() != null) {
+                     if ((adjecentCell.getValue() == 1 || adjecentCell.getValue() == 3) &&
+                             ((outsideCount > 1 && insideCount > 1) || outsideCount > 3 || insideCount > 3))
                          return false;
                      if (adjecentCell.getValue() == 0 && outsideCount > 0 && insideCount > 0) return false;
                  }
-
-                 if (adjecentCell.getValue() == 2 && (outsideCount > 2 || insideCount > 2)) return false;
              }
+            if (adjecentCell.getValue() != null) {
+                if (adjecentCell.getValue() == 2 && (outsideCount > 2 || insideCount > 2)) return false;
+            }
         }
         return true;
     }
@@ -204,7 +230,6 @@ public class Solver {
         boolean changed = false;
 
         if (Settings.cornerIDs.contains(cell.getId()) ) {
-            //TODO in some cases always true (both)
             for (Cell adjacentCell : adjacentCells) {
                 if (adjacentCell.getIsInside() == MyBoolean.NULL || cell.getIsInside() == MyBoolean.NULL) {
                     if (adjacentCell.getValue() != null && adjacentCell.getValue() == 1) {
@@ -220,7 +245,7 @@ public class Solver {
                 if (diagonalCell.getIsInside() == MyBoolean.NULL || cell.getIsInside() == MyBoolean.NULL) {
                     if (diagonalCell.getValue() != null && diagonalCell.getValue() == 3) {
                         cell.setIsInside(MyBoolean.TRUE);
-                        diagonalCell.setIsInside(MyBoolean.TRUE);
+                        diagonalCell.setIsInside(MyBoolean.FALSE);
                         changed = true;
                         break;
                     }

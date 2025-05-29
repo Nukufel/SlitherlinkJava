@@ -3,16 +3,16 @@ package ch;
 import java.util.*;
 
 public class Settings {
-    public static Random rand = new Random();
+    public static Random rand = new Random(2);
     public static int cellSize = 50;
-    public static int gridRows = 10, gridCols = 10;
+    public static int gridRows = 5, gridCols = 5;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
     public static LinkedHashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
-    public static int removeAmount = (int) (cellCount * 0.4);
-    public static int fastRemoveAmount = (int) (cellCount * 0.4);
+    public static int removeAmount = (int) (cellCount * 0.6);
+    public static int fastRemoveAmount = (int) (removeAmount * 0.4);
     public static ArrayList<Integer> cornerIDs = calculateCornerIds();
     public static ArrayList<Integer> edgeIDs = calculateEdgeIDs();
     public static ArrayList<Integer> topIDs = calculateTopIDs();
