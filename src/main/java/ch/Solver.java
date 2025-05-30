@@ -1,6 +1,7 @@
 package ch;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class Solver {
     private static final boolean[] POSSIBLE_VALUES = {true, false};
@@ -14,11 +15,19 @@ public class Solver {
 
     public boolean hasSingleSolution() {
         grid.setCellsUnidentified();
+        long startTime = System.nanoTime();
         while (scoutPatterns()) {
             continue;
         }
+        long time = (System.nanoTime()- startTime);
+        System.out.println("Scouting Patterns for: " + time);
         ArrayList<Cell> unidentifiedCells = grid.getUnidentifiedCells();
-        return !hasSecondSolution(unidentifiedCells);
+
+        long startTime2 = System.nanoTime();
+        boolean hasSecondSolution = hasSecondSolution(unidentifiedCells);
+        long time2 = (System.nanoTime()- startTime2);
+        System.out.println("Time for Checking if has second solution: " + time2);
+        return !hasSecondSolution;
     }
 
     private boolean hasSecondSolution(ArrayList<Cell> unidentifiedCells) {
@@ -42,9 +51,9 @@ public class Solver {
         }
 
         cell.setIsInside(MyBoolean.NULL);
-        unidentifiedCells.add(cell);
         return false;
     }
+
 
     private boolean isOriginalSolution() {
         for (Cell cell : grid.getCells()) {
