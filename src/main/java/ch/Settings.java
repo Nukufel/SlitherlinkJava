@@ -3,9 +3,10 @@ package ch;
 import java.util.*;
 
 public class Settings {
-    public static Random rand = new Random(2);
+    public static long randomSeed = 2;
+    public static Random rand = new Random(randomSeed);
     public static int cellSize = 50;
-    public static int gridRows = 10, gridCols = 10;
+    public static int gridRows = 5, gridCols = 5;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
     public static LinkedHashMap<String, Integer> directions = calculateDirections();

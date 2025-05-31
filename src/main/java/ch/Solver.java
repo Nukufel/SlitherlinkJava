@@ -7,25 +7,21 @@ public class Solver {
     private Grid grid;
     private Grid originalGrid;
 
-    public Solver(Grid grid, Grid originalGrid) {
+    public Solver(Grid grid, Grid originalGrid)  {
         this.grid = grid;
         this.originalGrid = originalGrid;
+
     }
 
     public boolean hasSingleSolution() {
         grid.setCellsUnidentified();
-        long startTime = System.nanoTime();
         while (scoutPatterns()) {
             continue;
         }
-        long time = (System.nanoTime()- startTime);
-        System.out.println("Scouting Patterns for: " + time);
+
         ArrayList<Cell> unidentifiedCells = grid.getUnidentifiedCells();
 
-        long startTime2 = System.nanoTime();
         boolean hasSecondSolution = hasSecondSolution(unidentifiedCells);
-        long time2 = (System.nanoTime()- startTime2);
-        System.out.println("Time for Checking if has second solution: " + time2);
         return !hasSecondSolution;
     }
 
@@ -35,10 +31,8 @@ public class Solver {
             return !isOriginalSolution() && isGridValid();
         }
 
-        Cell cell = getCellWithMostConstrains(unidentifiedCells);
+        Cell cell = unidentifiedCells.getFirst();
         ArrayList<Cell> remainingCells = new ArrayList<>(unidentifiedCells.subList(1, unidentifiedCells.size()));
-
-        //TODO maybe scout for patterns and get a new list (reverting at failing is hard)
 
         for (MyBoolean value : statesToCheck) {
             cell.setIsInside(value);
@@ -52,32 +46,6 @@ public class Solver {
         cell.setIsInside(MyBoolean.NULL);
         return false;
     }
-
-    private Cell getCellWithMostConstrains(ArrayList<Cell> cells){
-        Cell bestCell = cells.getFirst();
-        int maxScore = 0;
-        for (Cell cell : cells) {
-            int score = 0;
-            ArrayList<Integer> inAndOut = countAdjacentInAndOutsideCells(cell);
-            score += inAndOut.getFirst();
-            score += inAndOut.getLast();
-            if (Settings.cornerIDs.contains(cell.getId())) { score += 5;}
-            else if (Settings.edgeIDs.contains(cell.getId())) { score += 3; }
-            if (cell.getValue() != null) {
-                if (cell.getValue() == 2) {
-                    score += 2;
-                } else {
-                    score += 3;
-                }
-            }
-            if (score > maxScore) {
-                maxScore = score;
-                bestCell = cell;
-            }
-        }
-        return bestCell;
-    }
-
 
     private boolean isOriginalSolution() {
         for (Cell cell : grid.getCells()) {

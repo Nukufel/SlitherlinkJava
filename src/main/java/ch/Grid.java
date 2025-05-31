@@ -1,6 +1,10 @@
 package ch;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Grid {
     private Stack<Action> actionStack = new Stack<>();
@@ -15,7 +19,7 @@ public class Grid {
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
-        removeNumbers();
+        removeNumbersForFinalGrid();
     }
 
     public Grid(Grid other) {
@@ -130,43 +134,81 @@ public class Grid {
         }
     }
 
-    public void removeNumbers() {
+    public void setNumbersInvisible(ArrayList<Cell> numbersToSetInvisible) {
+        for (Cell copyedCell : numbersToSetInvisible) {
+            Cell cell = cells.get(copyedCell.getId());
+            cell.setShowValue(false);
+        }
+    }
+
+    public void removeNumbersForFinalGrid(){
+        final int threadCount = 10; // or set manually
+        final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         boolean isDone = false;
+
+        try{
+            List<Future<ArrayList<Cell>>> futures = new ArrayList<>();
+
+            for (int i = 0; i < threadCount; i++) {
+                Random random = new Random(Settings.randomSeed + i);
+                RemovalWorker removalWorker = new RemovalWorker(this, random);
+                futures.add(executor.submit(removalWorker));
+            }
+
+            for (Future<ArrayList<Cell>> future : futures) {
+                ArrayList<Cell> result = future.get(); // waits for the result
+
+                if (result != null && !result.isEmpty()) {
+                    setNumbersInvisible(result);
+                    isDone = true;
+                    break;
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        } finally {
+            executor.shutdownNow();
+        }
+
+        if (!isDone) {
+            System.out.println("Failed to remove numbers, no unique solution");
+        }
+    }
+
+    public ArrayList<Cell> getNumbersToRemove(Random rand) {
         int removeAmount = Settings.removeAmount;
         Grid copiedGrid = deepCopy();
         var solver = new Solver(copiedGrid, this);
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
-            ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null);
+            System.out.println("removing");
+            ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null, rand);
+            if (Thread.currentThread().isInterrupted()) {
+                return null;
+            }
 
             if (cellsOfNumbersToRemove != null && !cellsOfNumbersToRemove.isEmpty()) {
-                for (Cell copiedCell : cellsOfNumbersToRemove) {
-                    Cell cell = cells.get(copiedCell.getId());
-                    cell.setShowValue(false);
-                }
-                isDone = true;
-                break;
+                return cellsOfNumbersToRemove;
             }
         }
 
-        if (!isDone) {
-            System.out.print("Failed to remove numbers, no unique solution");
-        }
+        return null;
     }
 
-    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount, Cell lastCell) {
+    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount, Cell lastCell, Random rand) {
         if (removeAmount <= 0) {
             return cellsWithNumbersRemoved;
         }
 
-        Cell randomNumberedCell = getRandomNumberedCell(lastCell);
+
+        Cell randomNumberedCell = getRandomNumberedCell(lastCell, rand);
         Integer number =  randomNumberedCell.getValue();
 
         randomNumberedCell.setValue(null);
         cellsWithNumbersRemoved.add(randomNumberedCell);
 
         if (solver.hasSingleSolution()) {
-            if (removeNumber(solver, removeAmount - 1, randomNumberedCell) != null) {
+            if (removeNumber(solver, removeAmount - 1, randomNumberedCell, rand) != null) {
                 return cellsWithNumbersRemoved;
             }
         }
@@ -174,18 +216,21 @@ public class Grid {
         cellsWithNumbersRemoved.remove(randomNumberedCell);
         randomNumberedCell.setValue(number);
 
-
         return null;
 
     }
 
-    public Cell getRandomNumberedCell(Cell lastCell) {
-        List<Cell> numberedCells = cells.stream().filter(x -> x.hasValue()).toList();
+    public Cell getRandomNumberedCell(Cell lastCell, Random rand) {
+        List<Cell> numberedCells = getNumberedCells();
         Cell cell = numberedCells.get(rand.nextInt(numberedCells.size() - 1));
         if (lastCell != null && cell.getId() == lastCell.getId() && numberedCells.size() > 1) {
-            return getRandomNumberedCell(lastCell);
+            return getRandomNumberedCell(lastCell, rand);
         }
         return cell;
+    }
+
+    private List<Cell> getNumberedCells(){
+        return cells.stream().filter(x -> x.hasValue()).toList();
     }
 
     public ArrayList<Cell> getAdjacentCells(Cell cell) {
