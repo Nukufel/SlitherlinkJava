@@ -19,7 +19,10 @@ public class Grid {
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
+        long startTime = System.currentTimeMillis();
         removeNumbersForFinalGrid();
+        long time =  System.currentTimeMillis()- startTime;
+        System.out.println(time);
     }
 
     public Grid(Grid other) {
@@ -142,8 +145,8 @@ public class Grid {
     }
 
     public void removeNumbersForFinalGrid(){
-        final int threadCount = 10; // or set manually
-        final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        final int threadCount =  Settings.gridRows;
+        final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
         boolean isDone = false;
 
         try{
@@ -181,7 +184,6 @@ public class Grid {
         var solver = new Solver(copiedGrid, this);
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
-            System.out.println("removing");
             ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null, rand);
             if (Thread.currentThread().isInterrupted()) {
                 return null;
