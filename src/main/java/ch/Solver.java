@@ -1,7 +1,6 @@
 package ch;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 public class Solver {
     private static final boolean[] POSSIBLE_VALUES = {true, false};
@@ -36,7 +35,7 @@ public class Solver {
             return !isOriginalSolution() && isGridValid();
         }
 
-        Cell cell = unidentifiedCells.getFirst();
+        Cell cell = getCellWithMostConstrains(unidentifiedCells);
         ArrayList<Cell> remainingCells = new ArrayList<>(unidentifiedCells.subList(1, unidentifiedCells.size()));
 
         //TODO maybe scout for patterns and get a new list (reverting at failing is hard)
@@ -52,6 +51,31 @@ public class Solver {
 
         cell.setIsInside(MyBoolean.NULL);
         return false;
+    }
+
+    private Cell getCellWithMostConstrains(ArrayList<Cell> cells){
+        Cell bestCell = cells.getFirst();
+        int maxScore = 0;
+        for (Cell cell : cells) {
+            int score = 0;
+            ArrayList<Integer> inAndOut = countAdjacentInAndOutsideCells(cell);
+            score += inAndOut.getFirst();
+            score += inAndOut.getLast();
+            if (Settings.cornerIDs.contains(cell.getId())) { score += 5;}
+            else if (Settings.edgeIDs.contains(cell.getId())) { score += 3; }
+            if (cell.getValue() != null) {
+                if (cell.getValue() == 2) {
+                    score += 2;
+                } else {
+                    score += 3;
+                }
+            }
+            if (score > maxScore) {
+                maxScore = score;
+                bestCell = cell;
+            }
+        }
+        return bestCell;
     }
 
 
@@ -103,7 +127,6 @@ public class Solver {
                  }
                  if (outsideCount >= 4) return false;
              } else {
-                 //TODO ???
                  if (adjecentCell.getValue() != null) {
                      if ((adjecentCell.getValue() == 1 || adjecentCell.getValue() == 3) &&
                              ((outsideCount > 1 && insideCount > 1) || outsideCount > 3 || insideCount > 3))
