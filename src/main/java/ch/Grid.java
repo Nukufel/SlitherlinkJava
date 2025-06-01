@@ -1,17 +1,21 @@
 package ch;
 
+import javafx.util.Pair;
+
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 public class Grid {
     private Stack<Action> actionStack = new Stack<>();
-    private ArrayList<Cell> cells = new ArrayList<>();
-    private ArrayList<Cell> insideCells = new ArrayList<>();
-    private ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
-    private Random rand = Settings.rand;
+    private ArrayList<ArrayList<Cell>> cells = new ArrayList<>();
+    private final ArrayList<Cell> insideCells = new ArrayList<>();
+    private final ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
+    private ArrayList<ArrayList<Node>> nodes = initializeNodes();
+    private final Random rand = Settings.rand;
 
 
     public Grid() {
@@ -19,21 +23,19 @@ public class Grid {
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
-        long startTime = System.currentTimeMillis();
-        removeNumbersForFinalGrid();
-        long time =  System.currentTimeMillis()- startTime;
-        System.out.println(time);
+
+        //removeNumbersForFinalGrid();
     }
 
-    public Grid(Grid other) {
-        this.actionStack = new Stack<>();
-        for (Action action : other.actionStack) {
-            this.actionStack.push(new Action(action)); // Assuming Action has a copy constructor
-        }
 
+    public Grid(Grid other) {
         this.cells = new ArrayList<>();
-        for (Cell cell : other.cells) {
-            this.cells.add(new Cell(cell)); // Assuming Cell has a copy constructor
+        for (ArrayList<Cell> coll : other.cells) {
+            var newColl = new ArrayList<Cell>();
+            for (Cell cell : coll) {
+                newColl.add(new Cell(cell)); // Assuming Cell has a copy constructor
+            }
+            this.cells.add(newColl);
         }
     }
 
@@ -41,48 +43,68 @@ public class Grid {
         return new Grid(this);
     }
 
-    public void initializeCells() {
-        int boarderCount = 0;
-
-        for (int i = 0; i < Settings.cellCount; i++) {
-            var cell = new Cell(i);
-
-            if (cell.getId() == 0) {
-                boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
-
-            } else if (Settings.topIDs.contains(cell.getId())) {
-                var lastCell = cells.getLast();
-                var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
-                sharedBoarder.addCellId(cell.getId());
-                cell.addBoarder(Location.LEFT, sharedBoarder);
-
-                boarderCount +=  makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
-
-            } else if (Settings.leftIDs.contains(cell.getId())) {
-                var cellAbove = cells.get(cell.getId() - Settings.gridCols);
-                var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
-                sharedBoarder.addCellId(cell.getId());
-                cell.addBoarder(Location.TOP, sharedBoarder);
-
-                boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
-
-            } else {
-
-                var lastCell = cells.getLast();
-                var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
-                sharedBoarder1.addCellId(cell.getId());
-                cell.addBoarder(Location.LEFT, sharedBoarder1);
-
-                var cellAbove = cells.get(cell.getId() - Settings.gridCols);
-                var sharedBoarder2 = cellAbove.getBoarderByLocation(Location.BOTTOM);
-                sharedBoarder2.addCellId(cell.getId());
-                cell.addBoarder(Location.TOP, sharedBoarder2);
-
-                boarderCount +=  makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
-
+    public ArrayList<ArrayList<Node>> initializeNodes(){
+        var nodes = new ArrayList<ArrayList<Node>>();
+        for (int i = 0; i < Settings.gridRows+1; i++) {
+            var list = new ArrayList<Node>();
+            for (int j = 0; j < Settings.gridCols+1; j++) {
+                list.add(new Node(i, j));
             }
-            cells.add(cell);
+            nodes.add(list);
+        }
+        return nodes;
+    }
 
+    public void initializeCells() {
+        for (int i = 0; i < Settings.gridRows; i++) {
+            cells.add(new ArrayList<Cell>());
+        }
+
+        int boarderCount = 0;
+        Cell lastCell = null;
+
+        for (int i = 0; i < Settings.gridRows; i++) {
+            for (int j = 0; j < Settings.gridCols; j++) {
+                var cell = new Cell(i, j);
+                if (i == 0 && j == 0){
+                    lastCell = cell;
+                }
+
+                if (cell.getRow() + cell.getCol() == 0) {
+                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
+
+                } else if (cell.getRow() == 0) {
+                    var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
+                    sharedBoarder.addCellId(cell.getRow(), cell.getCol());
+                    cell.addBoarder(Location.LEFT, sharedBoarder);
+
+                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
+
+                } else if (cell.getCol() == 0) {
+                    var cellAbove = cells.get(i-1).get(cell.getCol());
+                    var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
+                    sharedBoarder.addCellId(cell.getRow(), cell.getCol());
+                    cell.addBoarder(Location.TOP, sharedBoarder);
+
+                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
+
+                } else {
+
+                    var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
+                    sharedBoarder1.addCellId(cell.getRow(), cell.getCol());
+                    cell.addBoarder(Location.LEFT, sharedBoarder1);
+
+                    var cellAbove = cells.get(i-1).get(cell.getCol());
+                    var sharedBoarder2 = cellAbove.getBoarderByLocation(Location.BOTTOM);
+                    sharedBoarder2.addCellId(cell.getRow(), cell.getCol());
+                    cell.addBoarder(Location.TOP, sharedBoarder2);
+
+                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
+
+                }
+                cells.get(i).add(cell);
+                lastCell = cell;
+            }
         }
     }
 
@@ -90,7 +112,7 @@ public class Grid {
         Location loc = startLocation;
         for (int h = 0; h < amountOfNewBoarders; h++) {
             var boarder = new Boarder(boarderCount);
-            boarder.addCellId(cell.getId());
+            boarder.addCellId(cell.getRow(), cell.getCol());
             cell.addBoarder(loc, boarder);
             boarderCount++;
             loc = Location.getNext(loc);
@@ -101,9 +123,9 @@ public class Grid {
     public void initializeInsideCells() {
         var failCount = 0;
         var projectedInsideCellCount = Settings.cellCount * Settings.insidePercentage;
-        var initialInsideCell = cells.get(rand.nextInt(cells.size()));
+        var initialInsideCell = cells.get(rand.nextInt(Settings.gridRows)).get(rand.nextInt(Settings.gridCols));
 
-        initialInsideCell.setIsInside(MyBoolean.TRUE);
+        initialInsideCell.setState(MyBoolean.TRUE);
         insideCells.add(initialInsideCell);
 
 
@@ -123,12 +145,12 @@ public class Grid {
             if (!adjacentWeightedCells.isEmpty()) {
                 var randomWeightedCell = getRandomWeightedCell(adjacentWeightedCells);
                 if (!insideCells.contains(randomWeightedCell)) {
-                    randomWeightedCell.setIsInside(MyBoolean.TRUE);
+                    randomWeightedCell.setState(MyBoolean.TRUE);
                     if (allConnected(insideCells.size() + 1)) {
                         failCount = 0;
                         insideCells.add(randomWeightedCell);
                     } else {
-                        randomWeightedCell.setIsInside(MyBoolean.FALSE);
+                        randomWeightedCell.setState(MyBoolean.FALSE);
                     }
                 } else {
                     failCount++;
@@ -139,7 +161,7 @@ public class Grid {
 
     public void setNumbersInvisible(ArrayList<Cell> numbersToSetInvisible) {
         for (Cell copyedCell : numbersToSetInvisible) {
-            Cell cell = cells.get(copyedCell.getId());
+            Cell cell = cells.get(copyedCell.getRow()).get(copyedCell.getCol());
             cell.setShowValue(false);
         }
     }
@@ -224,14 +246,22 @@ public class Grid {
     public Cell getRandomNumberedCell(Cell lastCell, Random rand) {
         List<Cell> numberedCells = getNumberedCells();
         Cell cell = numberedCells.get(rand.nextInt(numberedCells.size() - 1));
-        if (lastCell != null && cell.getId() == lastCell.getId() && numberedCells.size() > 1) {
+        if (lastCell != null && cell == lastCell && numberedCells.size() > 1) {
             return getRandomNumberedCell(lastCell, rand);
         }
         return cell;
     }
 
     private List<Cell> getNumberedCells(){
-        return cells.stream().filter(x -> x.hasValue()).toList();
+        var list = new ArrayList<Cell>();
+        for (ArrayList<Cell> col : cells){
+            for (Cell cell : col) {
+                if (cell.hasValue()){
+                    list.add(cell);
+                }
+            }
+        }
+        return list;
     }
 
     public ArrayList<Cell> getAdjacentCells(Cell cell) {
@@ -251,7 +281,7 @@ public class Grid {
             var score = 100;
             var adjacentCellsOfAdjacentCells = getAdjacentCells(adjacentCell);
             for (Cell adjacentCellsOfAdjacentCell : adjacentCellsOfAdjacentCells) {
-                if (adjacentCellsOfAdjacentCell.getIsInside() == MyBoolean.TRUE) {
+                if (adjacentCellsOfAdjacentCell.getState() == MyBoolean.TRUE) {
                     score -= 22;
                 }
             }
@@ -272,7 +302,7 @@ public class Grid {
 
         for (int i = 0; i < foundOutsideCells.size(); i++) {
             for (Cell adjacentCell : getAdjacentCells(foundOutsideCells.get(i))) {
-                if (adjacentCell.getIsInside() == MyBoolean.FALSE && !foundOutsideCells.contains(adjacentCell)) {
+                if (adjacentCell.getState() == MyBoolean.FALSE && !foundOutsideCells.contains(adjacentCell)) {
                     foundOutsideCells.add(adjacentCell);
                 }
             }
@@ -286,7 +316,7 @@ public class Grid {
         if (loc != null) {
             int count = 0;
             Cell nextCell = baseCell;
-            while (nextCell.getIsInside() == MyBoolean.TRUE) {
+            while (nextCell.getState() == MyBoolean.TRUE) {
                 count++;
                 nextCell = getCellByBoarderLocation(nextCell, loc);
                 if (nextCell == null) {
@@ -295,7 +325,7 @@ public class Grid {
             }
             loc = Location.getOppositeLocation(loc);
             nextCell = baseCell;
-            while (nextCell.getIsInside() == MyBoolean.TRUE) {
+            while (nextCell.getState() == MyBoolean.TRUE) {
                 count++;
                 nextCell = getCellByBoarderLocation(nextCell, loc);
                 if (nextCell == null) {
@@ -312,8 +342,8 @@ public class Grid {
         Location location = null;
         for (var key : baseCell.getBoarders().keySet()){
             Boarder border = baseCell.getBoarders().get(key);
-            for (Integer id: border.getCellIds()) {
-                if (adjacentCell.getId() == id) {
+            for (Pair<Integer, Integer> pair: border.getCellIds()) {
+                if (adjacentCell.getRow() == pair.getKey() && adjacentCell.getCol() == pair.getValue()) {
                     location = key;
                 }
             }
@@ -347,36 +377,45 @@ public class Grid {
 
     public ArrayList<Cell> getStartOutsideCells() {
         var startOutsideCell = new ArrayList<Cell>();
-        for (Cell cell : cells) {
-            if (Settings.edgeIDs.contains(cell.getId()) && cell.getIsInside() == MyBoolean.FALSE) {
-                startOutsideCell.add(cell);
+        for (ArrayList<Cell> col : cells) {
+            for (Cell cell : col) {
+                if ((cell.getRow() == 0 || cell.getCol() == 0 || cell.getRow() == Settings.gridRows -1 || cell.getCol() == Settings.gridCols -1)
+                        && cell.getState() == MyBoolean.FALSE) {
+                    startOutsideCell.add(cell);
+                }
             }
         }
         return startOutsideCell;
     }
 
     public void setNumberForAllCells() {
-        for (Cell cell : cells) {
-            cell.calcValue();
+        for (ArrayList<Cell> col : cells) {
+            for (Cell cell : col) {
+                cell.calcValue();
+            }
         }
     }
 
     public boolean isSolved() {
-        for (Cell cell : cells) {
-            if (!cell.isCellCorrect()) {
-                return false;
+        for (ArrayList<Cell> col : cells) {
+            for (Cell cell : col) {
+                if (!cell.isCellCorrect()) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
     public void setResultBoardersForAllCells() {
-        for (Cell cell : cells) {
-            if (cell.getIsInside() == MyBoolean.TRUE) {
-                for (Location location : Location.values()) {
-                    var adjacentCell = getCellByBoarderLocation(cell, location);
-                    if (adjacentCell == null || adjacentCell.getIsInside() == MyBoolean.FALSE) {
-                        cell.getBoarderByLocation(location).setResult(MyBoolean.TRUE);
+        for (ArrayList<Cell> col : cells) {
+            for (Cell cell : col) {
+                if (cell.getState() == MyBoolean.TRUE) {
+                    for (Location location : Location.values()) {
+                        var adjacentCell = getCellByBoarderLocation(cell, location);
+                        if (adjacentCell == null || adjacentCell.getState() == MyBoolean.FALSE) {
+                            cell.getBoarderByLocation(location).setResult(MyBoolean.TRUE);
+                        }
                     }
                 }
             }
@@ -385,34 +424,53 @@ public class Grid {
 
     public Cell getCellByBoarderLocation(Cell cell, Location location) {
         var boarder = cell.getBoarderByLocation(location);
-        var otherCellId = boarder.getOtherCellId(cell.getId());
+        var otherCellId = boarder.getOtherCellId(cell.getRow(), cell.getCol());
         if (otherCellId == null) {
             return null;
         }
-        return cells.get(otherCellId);
+        return cells.get(otherCellId.getKey()).get(otherCellId.getValue());
     }
 
 
     public void setCellsUnidentified() {
-        for (Cell cell : cells) {
-            cell.setIsInside(MyBoolean.NULL);
+        for (ArrayList<Cell> col : cells) {
+            for (Cell cell : col) {
+                cell.setState(MyBoolean.NULL);
+            }
         }
     }
 
     public ArrayList<Cell> getUnidentifiedCells() {
         var unidentifiedCells = new ArrayList<Cell>();
-        for (Cell cell : cells) {
-            if (cell.getIsInside() == MyBoolean.NULL) {
-                unidentifiedCells.add(cell);
+        for (ArrayList<Cell> col : cells) {
+            for (Cell cell : col) {
+                if (cell.getState() == MyBoolean.NULL) {
+                    unidentifiedCells.add(cell);
+                }
             }
         }
         return unidentifiedCells;
     }
 
-    public ArrayList<Cell> getCopyOfCells(){
-        return new ArrayList<>(cells);
+    public ArrayList<Cell> getFlattenedCells() {
+        var flattenedCells = new ArrayList<Cell>();
+        for (ArrayList<Cell> col : cells) {
+            flattenedCells.addAll(col);
+        }
+        return flattenedCells;
     }
 
+    public ArrayList<ArrayList<Cell>> getCells() {
+        return cells;
+    }
+
+    public ArrayList<ArrayList<Node>> getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(ArrayList<ArrayList<Node>> nodes) {
+        this.nodes = nodes;
+    }
 
     public Stack<Action> getActionStack() {
         return actionStack;
@@ -420,29 +478,5 @@ public class Grid {
 
     public void setActionStack(Stack<Action> actionStack) {
         this.actionStack = actionStack;
-    }
-
-    public ArrayList<Cell> getCellsWithNumbersRemoved() {
-        return cellsWithNumbersRemoved;
-    }
-
-    public void setCellsWithNumbersRemoved(ArrayList<Cell> cellsWithNumbersRemoved) {
-        this.cellsWithNumbersRemoved = cellsWithNumbersRemoved;
-    }
-
-    public ArrayList<Cell> getInsideCells() {
-        return insideCells;
-    }
-
-    public void setInsideCells(ArrayList<Cell> insideCells) {
-        this.insideCells = insideCells;
-    }
-
-    public ArrayList<Cell> getCells() {
-        return cells;
-    }
-
-    public void setCells(ArrayList<Cell> cells) {
-        this.cells = cells;
     }
 }

@@ -1,5 +1,7 @@
 package ch;
 
+import javafx.util.Pair;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -7,7 +9,8 @@ public class Boarder implements Serializable {
     MyBoolean state = MyBoolean.NULL;
     MyBoolean result = MyBoolean.NULL;
     Integer id;
-    ArrayList<Integer> cellIds = new ArrayList<>(2);
+    ArrayList<Pair<Integer, Integer>> cellIds = new ArrayList<>(2);
+    ArrayList<Node> connectedNodes = new ArrayList<>(2);
 
     public Boarder(Integer id) {
         this.id = id;
@@ -32,16 +35,18 @@ public class Boarder implements Serializable {
         }
     }
 
-    public void addCellId(Integer id) {
-        cellIds.add(id);
+    public void addCellId(int row, int col) {
+        cellIds.add(new Pair<>(row, col));
+
     }
 
-    public ArrayList<Integer> getCellIds() {
+    public ArrayList<Pair<Integer, Integer>> getCellIds() {
         return cellIds;
     }
 
-    public Integer getOtherCellId(Integer id) {
-        for (Integer cellId : cellIds) {
+    public Pair<Integer, Integer> getOtherCellId(int row, int col) {
+        var id = new Pair<>(row, col);
+        for (Pair<Integer, Integer> cellId : cellIds) {
             if (!cellId.equals(id)) {
                 return cellId;
             }
@@ -65,14 +70,6 @@ public class Boarder implements Serializable {
 
     public void setResult(MyBoolean result) {
         this.result = result;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public MyBoolean getState() {

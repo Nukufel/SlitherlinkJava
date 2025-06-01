@@ -1,9 +1,11 @@
 package ch;
 
+import javafx.util.Pair;
+
 import java.util.*;
 
 public class Settings {
-    public static long randomSeed = setRandomSeed(2);
+    public static long randomSeed = setRandomSeed(null);
     public static Random rand = new Random(randomSeed);
     public static int cellSize = 50;
     public static int gridRows = 5, gridCols = 5;
@@ -13,13 +15,6 @@ public class Settings {
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
     public static int removeAmount = (int) (cellCount * 0.6);
-    public static int fastRemoveAmount = (int) (removeAmount * 0.4);
-    public static ArrayList<Integer> cornerIDs = calculateCornerIds();
-    public static ArrayList<Integer> edgeIDs = calculateEdgeIDs();
-    public static ArrayList<Integer> topIDs = calculateTopIDs();
-    public static ArrayList<Integer> rightIDs = calculateRightIDs();
-    public static ArrayList<Integer> bottomIDs = calculateBottomIDs();
-    public static ArrayList<Integer> leftIDs = calculateLeftIDs();
 
     private static long setRandomSeed(Integer seed) {
         if (seed != null){
@@ -27,15 +22,6 @@ public class Settings {
         }
         Random random = new Random();
         return random.nextLong();
-    }
-
-    public static ArrayList<Integer> calculateCornerIds(){ 
-        var myList = new ArrayList<Integer>();
-        myList.add(0);
-        myList.add(gridCols - 1);
-        myList.add(cellCount - gridCols);
-        myList.add(cellCount - 1);
-        return myList;
     }
 
     public static LinkedHashMap<String, Integer> calculateDirections(){
@@ -49,48 +35,5 @@ public class Settings {
 
     public static float calculateInsidePercentage(Random rand) {
         return (rand.nextFloat(insidePercentageRange[1] - insidePercentageRange[0] + 1) + insidePercentageRange[0]) / 100;
-    }
-
-    public static ArrayList<Integer> calculateEdgeIDs() {
-        var edgeIDs = new ArrayList<Integer>();
-
-        edgeIDs.addAll(calculateTopIDs());
-        edgeIDs.addAll(calculateRightIDs());
-        edgeIDs.addAll(calculateBottomIDs());
-        edgeIDs.addAll(calculateLeftIDs());
-
-        return edgeIDs;
-    }
-
-    public static ArrayList<Integer> calculateTopIDs() {
-        var topIDs = new ArrayList<Integer>();
-        for (int i = 0; i < gridCols; i++) {
-            topIDs.add(i);
-        }
-        return topIDs;
-    }
-
-    public static ArrayList<Integer> calculateRightIDs() {
-        var rightIDs = new ArrayList<Integer>();
-        for (int i = 0; i < gridRows; i++) {
-            rightIDs.add(i * gridCols + gridCols - 1);
-        }
-        return rightIDs;
-    }
-
-    public static ArrayList<Integer> calculateBottomIDs() {
-        var bottomIDs = new ArrayList<Integer>();
-        for (int i = 0; i < gridCols; i++) {
-            bottomIDs.add(cellCount - gridCols + i);
-        }
-        return bottomIDs;
-    }
-
-    public static ArrayList<Integer> calculateLeftIDs() {
-        var leftIDs = new ArrayList<Integer>();
-        for (int i = 0; i < gridRows; i++) {
-            leftIDs.add(i * gridCols);
-        }
-        return leftIDs;
     }
 }

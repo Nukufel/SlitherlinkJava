@@ -42,7 +42,7 @@ public class Ui extends Application {
 
         for (int row = 0; row < Settings.gridRows; row++) {
             for (int col = 0; col < Settings.gridCols; col++) {
-                Cell cell = gameGrid.getCells().get(rowColToId(row, col));
+                Cell cell = gameGrid.getCells().get(row).get(col);
 
                 // Position for the top-left corner of the cell
                 int x = col * cellSize;
@@ -60,7 +60,7 @@ public class Ui extends Application {
 
 
                 Rectangle cellRect = new Rectangle(x, y, cellSize, cellSize);
-                if (cell.getIsInside() == MyBoolean.TRUE){
+                if (cell.getState() == MyBoolean.TRUE){
                     cellRect.setFill(Color.LIGHTPINK);
                 } else {
                     cellRect.setFill(Color.LIGHTGREEN);
@@ -201,10 +201,6 @@ public class Ui extends Application {
         }
     }
 
-
-    public static int rowColToId(int row, int col) {
-        return row * Settings.gridRows + col;
-    }
 
     public static void main(String[] args) {
         launch(args); // Launch the JavaFX application

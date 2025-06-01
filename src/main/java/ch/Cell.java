@@ -1,27 +1,31 @@
 package ch;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 public class Cell {
-    private int id;
-    private MyBoolean isInside = MyBoolean.FALSE;
+    private int row;
+    private int col;
+
+    private MyBoolean state = MyBoolean.FALSE;
     private Integer value;
     private Boolean showValue;
 
     private LinkedHashMap<Location, Boarder> boarders = new LinkedHashMap<>();
 
-    public Cell(int id) {
-        this.id = id;
+    public Cell(int row, int col) {
+        this.row = row;
+        this.col = col;
         value = null;
         showValue = true;
     }
 
     public Cell(Cell other) {
-        this.id = other.id;
+        this.row = other.row;
+        this.col = other.col;
         this.value = other.value;
         this.showValue = other.showValue;
-        this.isInside = other.isInside; // Assuming MyBoolean is immutable
+        this.state = other.state; // Assuming MyBoolean is immutable
 
         // Deep copy of the boarders map
         this.boarders = new LinkedHashMap<>();
@@ -35,28 +39,24 @@ public class Cell {
         boarders.put(location, boarder);
     }
 
-    public int getId() {
-        return id;
+    public int getRow() {
+        return row;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public int getCol() {
+        return col;
     }
 
-    public MyBoolean getIsInside() {
-        return isInside;
+    public MyBoolean getState() {
+        return state;
     }
 
-    public void setIsInside(MyBoolean isInside) {
-        this.isInside = isInside;
+    public void setState(MyBoolean state) {
+        this.state = state;
     }
 
     public LinkedHashMap<Location, Boarder> getBoarders() {
         return boarders;
-    }
-
-    public void setBoarders(LinkedHashMap<Location, Boarder> boarders) {
-        this.boarders = boarders;
     }
 
     public Boolean getShowValue() {
@@ -77,10 +77,6 @@ public class Cell {
 
     public boolean hasValue(){
         return value != null;
-    }
-
-    public boolean hasBoarder() {
-        return !boarders.isEmpty();
     }
 
     public Boarder getBoarderByLocation(Location location) {
@@ -104,5 +100,17 @@ public class Cell {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Cell cell)) return false;
+        return row == cell.row && col == cell.col;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(row, col);
     }
 }
