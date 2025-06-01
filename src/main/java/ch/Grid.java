@@ -183,7 +183,7 @@ public class Grid {
         Grid copiedGrid = deepCopy();
         var solver = new Solver(copiedGrid, this);
 
-        for (int i = 0; i < Math.pow(removeAmount, 2); i++) {
+        for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
             ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null, rand);
             if (Thread.currentThread().isInterrupted()) {
                 return null;
@@ -209,10 +209,8 @@ public class Grid {
         cellsWithNumbersRemoved.add(randomNumberedCell);
 
         if (solver.hasSingleSolution()) {
-            for (int i = 0; i < Settings.gridCols; i++) {
-                if (removeNumber(solver, removeAmount - 1, randomNumberedCell, rand) != null) {
-                    return cellsWithNumbersRemoved;
-                }
+            if (removeNumber(solver, removeAmount - 1, randomNumberedCell, rand) != null) {
+                return cellsWithNumbersRemoved;
             }
         }
 
