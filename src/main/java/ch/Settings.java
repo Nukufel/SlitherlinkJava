@@ -6,13 +6,13 @@ public class Settings {
     public static long randomSeed = setRandomSeed(2);
     public static Random rand = new Random(randomSeed);
     public static int cellSize = 50;
-    public static int gridRows = 10, gridCols = 10;
+    public static int gridRows = 5, gridCols = 5;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
     public static LinkedHashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
-    public static int removeAmount = (int) (cellCount * 0.4);
+    public static int removeAmount = (int) (cellCount * 0.6);
     public static int fastRemoveAmount = (int) (removeAmount * 0.4);
     public static ArrayList<Integer> cornerIDs = calculateCornerIds();
     public static ArrayList<Integer> edgeIDs = calculateEdgeIDs();
@@ -29,7 +29,7 @@ public class Settings {
         return random.nextLong();
     }
 
-    public static ArrayList<Integer> calculateCornerIds(){
+    public static ArrayList<Integer> calculateCornerIds(){ 
         var myList = new ArrayList<Integer>();
         myList.add(0);
         myList.add(gridCols - 1);
