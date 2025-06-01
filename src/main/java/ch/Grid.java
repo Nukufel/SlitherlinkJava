@@ -1,27 +1,30 @@
 package ch;
 
-import javafx.util.Pair;
-
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Stream;
 
 public class Grid {
     private Stack<Action> actionStack = new Stack<>();
     private ArrayList<ArrayList<Cell>> cells = new ArrayList<>();
+    private ArrayList<Border> borders = new ArrayList<>();
     private final ArrayList<Cell> insideCells = new ArrayList<>();
     private final ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
     private ArrayList<ArrayList<Node>> nodes = initializeNodes();
     private final Random rand = Settings.rand;
+    private Integer boarderCount = 0;
 
 
     public Grid() {
+        initializeBorders();
         initializeNodes();
         initializeCells();
+
+        addBordersToCells();
         addNodesToCells();
+
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
@@ -40,6 +43,10 @@ public class Grid {
             this.nodes.add(newCol);
         }
 
+        this.borders = new ArrayList<>();
+        for (Border border : other.borders) {
+            borders.add(new Border(border));
+        }
 
         this.cells = new ArrayList<>();
         for (ArrayList<Cell> col : other.cells) {
@@ -49,10 +56,20 @@ public class Grid {
             }
             this.cells.add(newCol);
         }
+
+        addBordersToCells();
+        addNodesToCells();
     }
 
     public Grid deepCopy() {
         return new Grid(this);
+    }
+
+    public void initializeBorders(){
+        int amount = (Settings.gridRows + 1) * Settings.gridCols * 2;
+        for (int i = 0; i < amount; i++){
+            borders.add(new Border(i));
+        }
     }
 
     public ArrayList<ArrayList<Node>> initializeNodes(){
@@ -74,17 +91,34 @@ public class Grid {
             var nodeBottomRight = nodes.get(cell.getRow()+1).get(cell.getCol()+1);
             var nodeBottomLeft = nodes.get(cell.getRow()+1).get(cell.getCol());
 
-            nodeTopLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.TOP));
-            nodeTopLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.LEFT));
+            var topBorder = cell.getBoarderByLocation(Location.TOP);
+            var rightBorder = cell.getBoarderByLocation(Location.RIGHT);
+            var bottomBorder = cell.getBoarderByLocation(Location.BOTTOM);
+            var leftBorder = cell.getBoarderByLocation(Location.LEFT);
 
-            nodeTopRight.connectedBoarders.add(cell.getBoarderByLocation(Location.TOP));
-            nodeTopRight.connectedBoarders.add(cell.getBoarderByLocation(Location.RIGHT));
+            nodeTopLeft.connectedBorders.add(topBorder);
+            nodeTopLeft.connectedBorders.add(leftBorder);
 
-            nodeBottomRight.connectedBoarders.add(cell.getBoarderByLocation(Location.RIGHT));
-            nodeBottomRight.connectedBoarders.add(cell.getBoarderByLocation(Location.BOTTOM));
+            nodeTopRight.connectedBorders.add(topBorder);
+            nodeTopRight.connectedBorders.add(rightBorder);
 
-            nodeBottomLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.BOTTOM));
-            nodeBottomLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.LEFT));
+            nodeBottomRight.connectedBorders.add(rightBorder);
+            nodeBottomRight.connectedBorders.add(bottomBorder);
+
+            nodeBottomLeft.connectedBorders.add(bottomBorder);
+            nodeBottomLeft.connectedBorders.add(leftBorder);
+
+            topBorder.addConnectedNode(nodeTopLeft);
+            topBorder.addConnectedNode(nodeTopRight);
+
+            rightBorder.addConnectedNode(nodeTopRight);
+            rightBorder.addConnectedNode(nodeBottomRight);
+
+            bottomBorder.addConnectedNode(nodeBottomRight);
+            bottomBorder.addConnectedNode(nodeBottomLeft);
+
+            leftBorder.addConnectedNode(nodeBottomLeft);
+            leftBorder.addConnectedNode(nodeTopLeft);
 
             cell.addCellNode(nodeTopLeft);
             cell.addCellNode(nodeTopRight);
@@ -98,64 +132,69 @@ public class Grid {
             cells.add(new ArrayList<Cell>());
         }
 
-        int boarderCount = 0;
-        Cell lastCell = null;
+        for (int i = 0; i < Settings.gridRows; i++) {
+            for (int j = 0; j < Settings.gridCols; j++) {
+                cells.get(i).add(new Cell(i, j));
+            }
+        }
+    }
+    public void addBordersToCells(){
+        Cell lastCell = cells.getFirst().getFirst();
 
         for (int i = 0; i < Settings.gridRows; i++) {
             for (int j = 0; j < Settings.gridCols; j++) {
-                var cell = new Cell(i, j);
+                var cell = cells.get(i).get(j);
+
                 if (i == 0 && j == 0){
                     lastCell = cell;
                 }
 
                 if (cell.getRow() + cell.getCol() == 0) {
-                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.TOP, 4);
+                    makeNewBoardersForCell(cell, Location.TOP, 4);
 
                 } else if (cell.getRow() == 0) {
                     var sharedBoarder = lastCell.getBoarderByLocation(Location.RIGHT);
-                    sharedBoarder.addCellId(cell.getRow(), cell.getCol());
+                    sharedBoarder.addConnectedCell(cell);
                     cell.addBoarder(Location.LEFT, sharedBoarder);
 
-                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.TOP, 3);
+                    makeNewBoardersForCell(cell, Location.TOP, 3);
 
                 } else if (cell.getCol() == 0) {
                     var cellAbove = cells.get(i-1).get(cell.getCol());
                     var sharedBoarder = cellAbove.getBoarderByLocation(Location.BOTTOM);
-                    sharedBoarder.addCellId(cell.getRow(), cell.getCol());
+                    sharedBoarder.addConnectedCell(cell);
                     cell.addBoarder(Location.TOP, sharedBoarder);
 
-                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 3);
+                    makeNewBoardersForCell(cell, Location.RIGHT, 3);
 
                 } else {
 
                     var sharedBoarder1 = lastCell.getBoarderByLocation(Location.RIGHT);
-                    sharedBoarder1.addCellId(cell.getRow(), cell.getCol());
+                    sharedBoarder1.addConnectedCell(cell);
                     cell.addBoarder(Location.LEFT, sharedBoarder1);
 
                     var cellAbove = cells.get(i-1).get(cell.getCol());
                     var sharedBoarder2 = cellAbove.getBoarderByLocation(Location.BOTTOM);
-                    sharedBoarder2.addCellId(cell.getRow(), cell.getCol());
+                    sharedBoarder2.addConnectedCell(cell);
                     cell.addBoarder(Location.TOP, sharedBoarder2);
 
-                    boarderCount += makeNewBoardersForCell(cell, boarderCount, Location.RIGHT, 2);
+                    makeNewBoardersForCell(cell, Location.RIGHT, 2);
 
                 }
-                cells.get(i).add(cell);
                 lastCell = cell;
             }
         }
     }
 
-    public int makeNewBoardersForCell(Cell cell, int boarderCount, Location startLocation, int amountOfNewBoarders) {
+    public void makeNewBoardersForCell(Cell cell, Location startLocation, int amountOfNewBoarders) {
         Location loc = startLocation;
         for (int h = 0; h < amountOfNewBoarders; h++) {
-            var boarder = new Boarder(boarderCount);
-            boarder.addCellId(cell.getRow(), cell.getCol());
-            cell.addBoarder(loc, boarder);
+            var border = borders.get(boarderCount);
+            border.addConnectedCell(cell);
+            cell.addBoarder(loc, border);
             boarderCount++;
             loc = Location.getNext(loc);
         }
-        return boarderCount;
     }
 
     public void initializeInsideCells() {
@@ -379,9 +418,9 @@ public class Grid {
     public Location getBorderLocationFromBaseToAdjacentCell(Cell baseCell, Cell adjacentCell) {
         Location location = null;
         for (var key : baseCell.getBoarders().keySet()){
-            Boarder border = baseCell.getBoarders().get(key);
-            for (Pair<Integer, Integer> pair: border.getCellIds()) {
-                if (adjacentCell.getRow() == pair.getKey() && adjacentCell.getCol() == pair.getValue()) {
+            Border border = baseCell.getBoarders().get(key);
+            for (Cell cell: border.getConnectedCells()) {
+                if (cell.equals(adjacentCell)) {
                     location = key;
                 }
             }
@@ -462,11 +501,11 @@ public class Grid {
 
     public Cell getCellByBoarderLocation(Cell cell, Location location) {
         var boarder = cell.getBoarderByLocation(location);
-        var otherCellId = boarder.getOtherCellId(cell.getRow(), cell.getCol());
-        if (otherCellId == null) {
+        var otherCell = boarder.getOtherCell(cell);
+        if (otherCell == null) {
             return null;
         }
-        return cells.get(otherCellId.getKey()).get(otherCellId.getValue());
+        return cells.get(otherCell.getRow()).get(otherCell.getCol());
     }
 
 

@@ -1,26 +1,26 @@
 package ch;
 
-import javafx.util.Pair;
-
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
-public class Boarder implements Serializable {
+public class Border implements Serializable {
     MyBoolean state = MyBoolean.NULL;
     MyBoolean result = MyBoolean.NULL;
     Integer id;
-    ArrayList<Pair<Integer, Integer>> cellIds = new ArrayList<>(2);
+    LinkedHashSet<Cell> connectedCells = new LinkedHashSet<>(2);
     ArrayList<Node> connectedNodes = new ArrayList<>(2);
 
-    public Boarder(Integer id) {
+    public Border(Integer id) {
         this.id = id;
     }
 
-    public Boarder(Boarder other) {
+    public Border(Border other) {
         this.id = other.id;
         this.state = other.state;
         this.result = other.result;
-        this.cellIds = new ArrayList<>(other.cellIds);
+        this.connectedCells = new LinkedHashSet<>();
+        this.connectedNodes = new ArrayList<>();
     }
 
     public void toggleBoarder() {
@@ -35,20 +35,19 @@ public class Boarder implements Serializable {
         }
     }
 
-    public void addCellId(int row, int col) {
-        cellIds.add(new Pair<>(row, col));
+    public void addConnectedCell(Cell cell) {
+        connectedCells.add(cell);
 
     }
 
-    public ArrayList<Pair<Integer, Integer>> getCellIds() {
-        return cellIds;
+    public LinkedHashSet<Cell> getConnectedCells() {
+        return connectedCells;
     }
 
-    public Pair<Integer, Integer> getOtherCellId(int row, int col) {
-        var id = new Pair<>(row, col);
-        for (Pair<Integer, Integer> cellId : cellIds) {
-            if (!cellId.equals(id)) {
-                return cellId;
+    public Cell getOtherCell(Cell otherCell) {
+        for (Cell connectedCell : connectedCells) {
+            if (!connectedCell.equals(otherCell)) {
+                return connectedCell;
             }
         }
         return null;
@@ -78,5 +77,17 @@ public class Boarder implements Serializable {
 
     public void setState(MyBoolean state) {
         this.state = state;
+    }
+
+    public void addConnectedNode(Node node) {
+        connectedNodes.add(node);
+    }
+
+    public ArrayList<Node> getConnectedNodes() {
+        return connectedNodes;
+    }
+
+    public void setConnectedNodes(ArrayList<Node> connectedNodes) {
+        this.connectedNodes = connectedNodes;
     }
 }

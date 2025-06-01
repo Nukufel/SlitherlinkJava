@@ -35,7 +35,7 @@ public class Ui extends Application {
     public void drawGrid(Pane root) {
         Pane rects = new Pane();
         rects.setPrefSize(Settings.gridCols * cellSize, Settings.gridRows * cellSize);
-        rects.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.NONE, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        rects.setBorder(new javafx.scene.layout.Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.NONE, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
 
         Pane lines = new Pane();
         lines.setPrefSize(Settings.gridCols * cellSize, Settings.gridRows * cellSize);
@@ -74,25 +74,25 @@ public class Ui extends Application {
 
                 // --- Draw boarders for this cell ---
                 for (Location loc : cell.getBoarders().keySet()) {
-                    Boarder boarder = cell.getBoarderByLocation(loc);
+                    Border border = cell.getBoarderByLocation(loc);
                     Group group = null;
 
                     switch (loc) {
                         case Location.TOP ->  {
                             if (y == 0) {
-                                group = addLine(x,y,x+cellSize,y, boarder, Location.TOP);
+                                group = addLine(x,y,x+cellSize,y, border, Location.TOP);
                             }
                         }
                         case Location.LEFT -> {
                             if (x == 0) {
-                                group = addLine(x,y,x,y+cellSize, boarder, Location.LEFT);
+                                group = addLine(x,y,x,y+cellSize, border, Location.LEFT);
                             }
                         }
                         case Location.RIGHT -> {
-                            group = addLine(x+cellSize, y,x+cellSize,y+cellSize, boarder, Location.RIGHT);
+                            group = addLine(x+cellSize, y,x+cellSize,y+cellSize, border, Location.RIGHT);
                         }
                         case Location.BOTTOM -> {
-                            group = addLine(x,y+cellSize,x+cellSize,y+cellSize, boarder, Location.BOTTOM);
+                            group = addLine(x,y+cellSize,x+cellSize,y+cellSize, border, Location.BOTTOM);
                         }
                     }
 
@@ -108,7 +108,7 @@ public class Ui extends Application {
         root.getChildren().add(rects);
     }
 
-    private Group addLine(Integer x1, Integer y1, Integer x2, Integer y2, Boarder boarder, Location loc) {
+    private Group addLine(Integer x1, Integer y1, Integer x2, Integer y2, Border border, Location loc) {
         Line line = new Line(x1, y1, x2, y2);
         line.setStrokeWidth(1);
         line.setStroke(Color.GRAY);
@@ -117,7 +117,7 @@ public class Ui extends Application {
         Group x = createX(line, loc);
 
         Rectangle clickArea = createClickBox(x1, y1, x2, y2, loc);
-        clickArea.setOnMouseClicked(event -> handleCellClick(boarder, line, x));
+        clickArea.setOnMouseClicked(event -> handleCellClick(border, line, x));
 
         return new Group(line, x, clickArea);
     }
@@ -159,9 +159,9 @@ public class Ui extends Application {
 
 
 
-    private void handleCellClick(Boarder boarder, javafx.scene.shape.Line line, Group xGroup) {
-        boarder.toggleBoarder();
-        MyBoolean state = boarder.getState();
+    private void handleCellClick(Border border, javafx.scene.shape.Line line, Group xGroup) {
+        border.toggleBoarder();
+        MyBoolean state = border.getState();
         switch (state) {
             case MyBoolean.TRUE:
                 line.setStrokeWidth(3);

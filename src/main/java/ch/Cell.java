@@ -1,19 +1,19 @@
 package ch;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Objects;
+import javafx.util.Pair;
+
+import java.util.*;
 
 public class Cell {
-    private int row;
-    private int col;
+    private final int row;
+    private final int col;
 
     private MyBoolean state = MyBoolean.FALSE;
     private Integer value;
     private Boolean showValue;
 
-    private ArrayList<Node> cellNodes = new ArrayList<>();
-    private LinkedHashMap<Location, Boarder> boarders = new LinkedHashMap<>();
+    private LinkedHashSet<Node> cellNodes = new LinkedHashSet<>();
+    private LinkedHashMap<Location, Border> borders = new LinkedHashMap<>();
 
     public Cell(int row, int col) {
         this.row = row;
@@ -28,17 +28,17 @@ public class Cell {
         this.value = other.value;
         this.showValue = other.showValue;
         this.state = other.state; // Assuming MyBoolean is immutable
+        this.cellNodes = new LinkedHashSet<>();
 
         // Deep copy of the boarders map
-        this.boarders = new LinkedHashMap<>();
-        for (Location loc : other.boarders.keySet()) {
-            Boarder originalBoarder = other.boarders.get(loc);
-            this.boarders.put(loc, new Boarder(originalBoarder)); // Assuming Boarder has a copy constructor
-        }
+        this.borders = new LinkedHashMap<>();
+
+
+
     }
 
-    public void addBoarder(Location location, Boarder boarder) {
-        boarders.put(location, boarder);
+    public void addBoarder(Location location, Border border) {
+        borders.put(location, border);
     }
 
     public int getRow() {
@@ -57,8 +57,8 @@ public class Cell {
         this.state = state;
     }
 
-    public LinkedHashMap<Location, Boarder> getBoarders() {
-        return boarders;
+    public LinkedHashMap<Location, Border> getBoarders() {
+        return borders;
     }
 
     public Boolean getShowValue() {
@@ -81,13 +81,13 @@ public class Cell {
         return value != null;
     }
 
-    public Boarder getBoarderByLocation(Location location) {
-        return boarders.get(location);
+    public Border getBoarderByLocation(Location location) {
+        return borders.get(location);
     }
 
     public void calcValue(){
         var count = 0;
-        for (var boarder : boarders.values()) {
+        for (var boarder : borders.values()) {
             if (boarder.getResult() == MyBoolean.TRUE) {
                 count++;
             }
@@ -96,7 +96,7 @@ public class Cell {
     }
 
     public boolean isCellCorrect(){
-        for (var boarder : boarders.values()) {
+        for (var boarder : borders.values()) {
             if (!boarder.isCorrect()) {
                 return false;
             }
@@ -116,13 +116,7 @@ public class Cell {
         return Objects.hash(row, col);
     }
 
-    public ArrayList<Node> getCellNodes() {
-        return cellNodes;
-    }
 
-    public void setCellNodes(ArrayList<Node> cellNodes) {
-        this.cellNodes = cellNodes;
-    }
 
     public void addCellNode(Node node) {
         cellNodes.add(node);
