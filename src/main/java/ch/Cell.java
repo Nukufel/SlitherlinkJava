@@ -1,5 +1,6 @@
 package ch;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
@@ -11,6 +12,7 @@ public class Cell {
     private Integer value;
     private Boolean showValue;
 
+    private ArrayList<Node> cellNodes = new ArrayList<>();
     private LinkedHashMap<Location, Boarder> boarders = new LinkedHashMap<>();
 
     public Cell(int row, int col) {
@@ -112,5 +114,17 @@ public class Cell {
     @Override
     public int hashCode() {
         return Objects.hash(row, col);
+    }
+
+    public ArrayList<Node> getCellNodes() {
+        return cellNodes;
+    }
+
+    public void setCellNodes(ArrayList<Node> cellNodes) {
+        this.cellNodes = cellNodes;
+    }
+
+    public void addCellNode(Node node) {
+        cellNodes.add(node);
     }
 }

@@ -19,7 +19,9 @@ public class Grid {
 
 
     public Grid() {
+        initializeNodes();
         initializeCells();
+        addNodesToCells();
         initializeInsideCells();
         setResultBoardersForAllCells();
         setNumberForAllCells();
@@ -29,13 +31,23 @@ public class Grid {
 
 
     public Grid(Grid other) {
-        this.cells = new ArrayList<>();
-        for (ArrayList<Cell> coll : other.cells) {
-            var newColl = new ArrayList<Cell>();
-            for (Cell cell : coll) {
-                newColl.add(new Cell(cell)); // Assuming Cell has a copy constructor
+        this.nodes = new ArrayList<>();
+        for (ArrayList<Node> col : other.nodes) {
+            var newCol = new ArrayList<Node>();
+            for (Node node : col) {
+                newCol.add(new Node(node));
             }
-            this.cells.add(newColl);
+            this.nodes.add(newCol);
+        }
+
+
+        this.cells = new ArrayList<>();
+        for (ArrayList<Cell> col : other.cells) {
+            var newCol = new ArrayList<Cell>();
+            for (Cell cell : col) {
+                newCol.add(new Cell(cell)); // Assuming Cell has a copy constructor
+            }
+            this.cells.add(newCol);
         }
     }
 
@@ -53,6 +65,32 @@ public class Grid {
             nodes.add(list);
         }
         return nodes;
+    }
+
+    public void addNodesToCells(){
+        for (Cell cell : getFlattenedCells()){
+            var nodeTopLeft = nodes.get(cell.getRow()).get(cell.getCol());
+            var nodeTopRight = nodes.get(cell.getRow()).get(cell.getCol()+1);
+            var nodeBottomRight = nodes.get(cell.getRow()+1).get(cell.getCol()+1);
+            var nodeBottomLeft = nodes.get(cell.getRow()+1).get(cell.getCol());
+
+            nodeTopLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.TOP));
+            nodeTopLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.LEFT));
+
+            nodeTopRight.connectedBoarders.add(cell.getBoarderByLocation(Location.TOP));
+            nodeTopRight.connectedBoarders.add(cell.getBoarderByLocation(Location.RIGHT));
+
+            nodeBottomRight.connectedBoarders.add(cell.getBoarderByLocation(Location.RIGHT));
+            nodeBottomRight.connectedBoarders.add(cell.getBoarderByLocation(Location.BOTTOM));
+
+            nodeBottomLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.BOTTOM));
+            nodeBottomLeft.connectedBoarders.add(cell.getBoarderByLocation(Location.LEFT));
+
+            cell.addCellNode(nodeTopLeft);
+            cell.addCellNode(nodeTopRight);
+            cell.addCellNode(nodeBottomRight);
+            cell.addCellNode(nodeBottomLeft);
+        }
     }
 
     public void initializeCells() {
@@ -462,6 +500,14 @@ public class Grid {
 
     public ArrayList<ArrayList<Cell>> getCells() {
         return cells;
+    }
+
+    public ArrayList<Node> getFlattenedNodes() {
+        var flattenedCells = new ArrayList<Node>();
+        for (ArrayList<Node> col : nodes) {
+            flattenedCells.addAll(col);
+        }
+        return flattenedCells;
     }
 
     public ArrayList<ArrayList<Node>> getNodes() {
