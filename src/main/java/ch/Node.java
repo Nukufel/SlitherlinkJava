@@ -29,14 +29,14 @@ public class Node {
         this.activeBorders = activeBorders;
     }
 
-    public ArrayList<Border> getInactiveBorders() {
-        var inactiveBorders = new ArrayList<Border>();
-        for (Border b : connectedBorders) {
-            if (!activeBorders.contains(b)) {
-                inactiveBorders.add(b);
+    public ArrayList<Border> getNullBorders() {
+        var nullBorders = new ArrayList<Border>();
+        for (Border border : connectedBorders) {
+            if (border.getState() == MyBoolean.NULL){
+                nullBorders.add(border);
             }
         }
-        return inactiveBorders;
+        return nullBorders;
     }
 
     public boolean isFull(){

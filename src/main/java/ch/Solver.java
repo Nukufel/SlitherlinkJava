@@ -35,7 +35,7 @@ public class Solver {
         Node node = nodesWithOneBorder.getFirst(); //get a good border
         nodesWithOneBorder.remove(node);
 
-        for (Border border : node.getInactiveBorders()) { //maybe only get null borders
+        for (Border border : node.getNullBorders()) { //maybe only get null borders
             if (cellsHaveSpace(border) && nodesHaveSpace(border)){
                 border.setState(MyBoolean.TRUE);
                 if (hasSecondSolution()){
