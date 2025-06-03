@@ -175,7 +175,7 @@ public class Ui extends Application {
                 line.setFill(Color.GRAY);
                 setXs(xGroup, true);
                 break;
-            case MyBoolean.NULL:
+            case MyBoolean.NONE:
                 line.setStrokeWidth(1);
                 line.setStroke(Color.GRAY);
                 line.setFill(Color.GRAY);

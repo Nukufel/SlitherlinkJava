@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 public class Border implements Serializable {
-    MyBoolean state = MyBoolean.NULL;
-    MyBoolean result = MyBoolean.NULL;
+    MyBoolean state = MyBoolean.NONE;
+    MyBoolean result = MyBoolean.NONE;
     Integer id;
     LinkedHashSet<Cell> connectedCells = new LinkedHashSet<>(2);
     ArrayList<Node> connectedNodes = new ArrayList<>(2);
@@ -25,12 +25,12 @@ public class Border implements Serializable {
 
     public void toggleBoarder() {
         if (state == MyBoolean.FALSE) {
-            state = MyBoolean.NULL;
+            state = MyBoolean.NONE;
         }
         else if (state == MyBoolean.TRUE) {
             state = MyBoolean.FALSE;
         }
-        else if (state == MyBoolean.NULL) {
+        else if (state == MyBoolean.NONE) {
             state = MyBoolean.TRUE;
         }
     }

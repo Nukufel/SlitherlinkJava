@@ -512,7 +512,7 @@ public class Grid {
     public void setCellsUnidentified() {
         for (ArrayList<Cell> col : cells) {
             for (Cell cell : col) {
-                cell.setState(MyBoolean.NULL);
+                cell.setState(MyBoolean.NONE);
             }
         }
     }
@@ -521,7 +521,7 @@ public class Grid {
         var unidentifiedCells = new ArrayList<Cell>();
         for (ArrayList<Cell> col : cells) {
             for (Cell cell : col) {
-                if (cell.getState() == MyBoolean.NULL) {
+                if (cell.getState() == MyBoolean.NONE) {
                     unidentifiedCells.add(cell);
                 }
             }

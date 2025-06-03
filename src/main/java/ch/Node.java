@@ -32,7 +32,7 @@ public class Node {
     public ArrayList<Border> getNullBorders() {
         var nullBorders = new ArrayList<Border>();
         for (Border border : connectedBorders) {
-            if (border.getState() == MyBoolean.NULL){
+            if (border.getState() == MyBoolean.NONE){
                 nullBorders.add(border);
             }
         }
@@ -41,5 +41,9 @@ public class Node {
 
     public boolean isFull(){
         return activeBorders.size() >= 2;
+    }
+
+    public LinkedHashSet<Border> getConnectedBorders() {
+        return connectedBorders;
     }
 }

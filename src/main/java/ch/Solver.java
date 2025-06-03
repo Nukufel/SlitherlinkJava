@@ -1,14 +1,15 @@
 package ch;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Solver {
-    private static final boolean[] POSSIBLE_VALUES = {true, false};
     private Grid grid;
     private Grid originalGrid;
     ArrayList<Border> setBorders;
     ArrayList<Border> unsetBorders;
     ArrayList<Node> nodesWithOneBorder;
+    ArrayList<Node> cornerNodes;
 
     public Solver(Grid grid, Grid originalGrid)  {
         this.grid = grid;
@@ -16,6 +17,7 @@ public class Solver {
         setBorders = (ArrayList<Border>) grid.getBorders().stream().filter(x -> x.isSet()).toList();
         unsetBorders = (ArrayList<Border>) grid.getBorders().stream().filter(x -> !x.isSet()).toList();
         nodesWithOneBorder = getNodesWithOneBorder();
+        cornerNodes = getCornerNodes();
     }
 
     public boolean hasSingleSolution() {
@@ -24,7 +26,7 @@ public class Solver {
     }
 
     public boolean hasSecondSolution(){
-        if (unsetBorders.isEmpty()) {
+        if (nodesWithOneBorder.isEmpty()) {
             if (isOriginalSolution()){
                 return false;
             }
@@ -32,7 +34,7 @@ public class Solver {
         }
 
         // this requires patterns to be found first
-        Node node = nodesWithOneBorder.getFirst(); //get a good border
+        Node node = nodesWithOneBorder.getFirst(); //get a good node
         nodesWithOneBorder.remove(node);
 
         for (Border border : node.getNullBorders()) { //maybe only get null borders
@@ -41,7 +43,7 @@ public class Solver {
                 if (hasSecondSolution()){
                     return true;
                 }
-                border.setState(MyBoolean.NULL);
+                border.setState(MyBoolean.NONE);
             }
         }
 
@@ -80,5 +82,34 @@ public class Solver {
             }
         }
         return nodesWithOneBorder;
+    }
+
+    public ArrayList<Border> scoutPatterns() {
+        HashSet<Border> scoutedBorders = new HashSet<>();
+        int lastSize = 0;
+        boolean firstIt = true;
+        while(scoutedBorders.size() > lastSize || firstIt){
+            firstIt = false;
+            lastSize = scoutedBorders.size();
+
+        }
+        return null;
+
+    }
+
+    public void cornerPatterns(HashSet<Border> scoutedBorders){
+        for (Node node : cornerNodes){
+            continue;
+        }
+    }
+
+    public ArrayList<Node> getCornerNodes() {
+        ArrayList<Node> cornerNodes = new ArrayList<>();
+        for (Node node : grid.getFlattenedNodes()) {
+            if (node.getConnectedBorders().size() == 2) {
+                cornerNodes.add(node);
+            }
+        }
+        return cornerNodes;
     }
 }
