@@ -85,6 +85,7 @@ public class Cell {
         return borders.get(location);
     }
 
+
     public void calcValue(){
         var count = 0;
         for (var boarder : borders.values()) {
@@ -103,6 +104,20 @@ public class Cell {
         }
         return true;
     }
+
+    public boolean isFull() {
+        int count = 0;
+        for (Border border : borders.values()) {
+            if (border.getResult() == MyBoolean.TRUE) {
+                count ++;
+            }
+        }
+        if (count >= value) {
+            return true;
+        }
+        return false;
+    }
+
 
     @Override
     public boolean equals(Object o) {

@@ -63,6 +63,11 @@ public class Border implements Serializable {
         return true;
     }
 
+    public boolean isSet(){
+        return state == MyBoolean.TRUE;
+    }
+
+
     public MyBoolean getResult() {
         return result;
     }

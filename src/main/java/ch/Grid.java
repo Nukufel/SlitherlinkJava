@@ -529,6 +529,7 @@ public class Grid {
         return unidentifiedCells;
     }
 
+
     public ArrayList<Cell> getFlattenedCells() {
         var flattenedCells = new ArrayList<Cell>();
         for (ArrayList<Cell> col : cells) {
@@ -547,6 +548,10 @@ public class Grid {
             flattenedCells.addAll(col);
         }
         return flattenedCells;
+    }
+
+    public ArrayList<Border> getBorders(){
+        return borders;
     }
 
     public ArrayList<ArrayList<Node>> getNodes() {

@@ -1,5 +1,6 @@
 package ch;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 public class Node {
@@ -18,5 +19,27 @@ public class Node {
         this.col = node.col;
         this.connectedBorders = new LinkedHashSet<>();
         this.activeBorders = new LinkedHashSet<>();
+    }
+
+    public LinkedHashSet<Border> getActiveBorders() {
+        return activeBorders;
+    }
+
+    public void setActiveBorders(LinkedHashSet<Border> activeBorders) {
+        this.activeBorders = activeBorders;
+    }
+
+    public ArrayList<Border> getInactiveBorders() {
+        var inactiveBorders = new ArrayList<Border>();
+        for (Border b : connectedBorders) {
+            if (!activeBorders.contains(b)) {
+                inactiveBorders.add(b);
+            }
+        }
+        return inactiveBorders;
+    }
+
+    public boolean isFull(){
+        return activeBorders.size() >= 2;
     }
 }
