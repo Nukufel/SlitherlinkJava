@@ -14,8 +14,8 @@ public class Solver {
     public Solver(Grid grid, Grid originalGrid)  {
         this.grid = grid;
         this.originalGrid = originalGrid;
-        setBorders = (ArrayList<Border>) grid.getBorders().stream().filter(x -> x.isSet()).toList();
-        unsetBorders = (ArrayList<Border>) grid.getBorders().stream().filter(x -> !x.isSet()).toList();
+        setBorders = new ArrayList<>(grid.getBorders().stream().filter(Border::isSet).toList());
+        unsetBorders = new ArrayList<>(grid.getBorders().stream().filter(x -> !x.isSet()).toList());
         nodesWithOneBorder = getNodesWithOneBorder();
         cornerNodes = getCornerNodes();
     }

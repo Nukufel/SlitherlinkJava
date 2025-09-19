@@ -8,13 +8,15 @@ public class Settings {
     public static long randomSeed = setRandomSeed(2);
     public static Random rand = new Random(randomSeed);
     public static int cellSize = 50;
-    public static int gridRows = 5, gridCols = 5;
+    public static int gridRows = 3, gridCols = 3;
     public static int cellCount = gridRows * gridCols;
     public static int failCount = 2000;
     public static LinkedHashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
-    public static int removeAmount = (int) (cellCount * 0.6);
+    //public static int removeAmount = (int) (cellCount * 0.6);
+    public static int removeAmount = 2;
+
 
     private static long setRandomSeed(Integer seed) {
         if (seed != null){

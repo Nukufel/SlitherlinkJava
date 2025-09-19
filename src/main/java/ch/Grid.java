@@ -1,5 +1,6 @@
 package ch;
 
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -29,7 +30,7 @@ public class Grid {
         setResultBoardersForAllCells();
         setNumberForAllCells();
 
-        //removeNumbersForFinalGrid();
+        removeNumbersForFinalGrid();
     }
 
 
@@ -244,7 +245,7 @@ public class Grid {
     }
 
     public void removeNumbersForFinalGrid(){
-        final int threadCount =  Settings.gridRows;
+        final int threadCount =  1; //Settings.gridRows;
         final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
         boolean isDone = false;
 
@@ -259,7 +260,6 @@ public class Grid {
 
             for (Future<ArrayList<Cell>> future : futures) {
                 ArrayList<Cell> result = future.get(); // waits for the result
-
                 if (result != null && !result.isEmpty()) {
                     setNumbersInvisible(result);
                     isDone = true;
@@ -267,7 +267,7 @@ public class Grid {
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            e.getCause().printStackTrace();
         } finally {
             executor.shutdownNow();
         }

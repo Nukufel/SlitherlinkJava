@@ -54,13 +54,16 @@ public class Border implements Serializable {
     }
 
     public boolean isCorrect(){
-        if (result == MyBoolean.TRUE && state != MyBoolean.TRUE) {
-            return false;
+        if (result == MyBoolean.TRUE && state == MyBoolean.TRUE) {
+            return true;
         }
-        if (state == MyBoolean.TRUE && result != MyBoolean.TRUE) {
-            return false;
+        if (result == MyBoolean.FALSE && state == MyBoolean.FALSE) {
+            return true;
         }
-        return true;
+        if (result == MyBoolean.NONE && state == MyBoolean.NONE) {
+            return true;
+        }
+        return false;
     }
 
     public boolean isSet(){
