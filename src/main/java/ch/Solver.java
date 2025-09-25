@@ -2,114 +2,113 @@ package ch;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 
 public class Solver {
     private Grid grid;
     private Grid originalGrid;
-    ArrayList<Border> setBorders;
-    ArrayList<Border> unsetBorders;
-    ArrayList<Node> nodesWithOneBorder;
-    ArrayList<Node> cornerNodes;
+    ArrayList<Cell> cornerCells;
+    ArrayList<Cell> patternCells;
 
     public Solver(Grid grid, Grid originalGrid)  {
         this.grid = grid;
         this.originalGrid = originalGrid;
-        setBorders = new ArrayList<>(grid.getBorders().stream().filter(Border::isSet).toList());
-        unsetBorders = new ArrayList<>(grid.getBorders().stream().filter(x -> !x.isSet()).toList());
-        nodesWithOneBorder = getNodesWithOneBorder();
-        cornerNodes = getCornerNodes();
+        grid.setCellsUnidentified();
+        cornerCells = getCornerCells();
+        patternCells = new ArrayList<>();
     }
 
     public boolean hasSingleSolution() {
-        //scout patterns
-        return !hasSecondSolution();
+        scoutPatterns();
+        solve();
+        return true;
     }
 
-    public boolean hasSecondSolution(){
-        if (nodesWithOneBorder.isEmpty()) {
-            if (isOriginalSolution()){
-                return false;
-            }
+    public boolean solve() {
+
+        Cell randomUnidentifiedCell = getRandomUnidentifiedCell();
+        if (randomUnidentifiedCell == null) {
             return true;
         }
 
-        // this requires patterns to be found first
-        Node node = nodesWithOneBorder.getFirst(); //get a good node
-        nodesWithOneBorder.remove(node);
-
-        for (Border border : node.getNullBorders()) { //maybe only get null borders
-            if (cellsHaveSpace(border) && nodesHaveSpace(border)){
-                border.setState(MyBoolean.TRUE);
-                if (hasSecondSolution()){
+        for (MyBoolean state : MyBoolean.validStates()){
+            randomUnidentifiedCell.setState(state);
+            if (true){ //some constraint
+                if (solve()){
                     return true;
                 }
-                border.setState(MyBoolean.NONE);
             }
         }
 
-        nodesWithOneBorder.add(node);
+        randomUnidentifiedCell.setState(MyBoolean.NONE);
         return false;
     }
 
+    public boolean isValidGrid() {
 
-    public boolean isOriginalSolution(){
-        return grid.isSolved();
     }
 
-    public boolean nodesHaveSpace(Border border){
-        for (Node node : border.getConnectedNodes()) {
-            if (node.isFull()){
-                return false;
+    public void scoutPatterns(){
+        for (Cell cell : grid.getFlattenedCells()) {
+            if (cell.hasValue()){
+                if (cell.getValue() == 0){
+                    zeroPatterns(cell);
+                } else if (cell.getValue() == 1){
+                    onePatterns(cell);
+                } else if (cell.getValue() == 2){
+
+                } else {
+                    threePatterns(cell);
+                }
             }
         }
-        return true;
     }
 
-    public boolean cellsHaveSpace(Border border){
-        for (Cell cell : border.getConnectedCells()) {
-            if (cell.isFull()){
-                return false;
-            }
-        }
-        return true;
+    public void zeroPatterns(Cell cell){
+        cornerPattern(cell, MyBoolean.FALSE);
     }
 
-    public ArrayList<Node> getNodesWithOneBorder() {
-        ArrayList<Node> nodesWithOneBorder = new ArrayList<>();
-        for (Node node : grid.getFlattenedNodes()) {
-            if (node.activeBorders.size() == 1) {
-                nodesWithOneBorder.add(node);
-            }
-        }
-        return nodesWithOneBorder;
+    public void onePatterns(Cell cell){
+        cornerPattern(cell, MyBoolean.FALSE);
     }
 
-    public ArrayList<Border> scoutPatterns() {
-        HashSet<Border> scoutedBorders = new HashSet<>();
-        int lastSize = 0;
-        boolean firstIt = true;
-        while(scoutedBorders.size() > lastSize || firstIt){
-            firstIt = false;
-            lastSize = scoutedBorders.size();
-
-        }
-        return null;
+    public void towPatterns(Cell cell){
 
     }
 
-    public void cornerPatterns(HashSet<Border> scoutedBorders){
-        for (Node node : cornerNodes){
-            continue;
+    public void threePatterns(Cell cell){
+        cornerPattern(cell, MyBoolean.TRUE);
+    }
+
+    public void setStateForCell(Cell cell, MyBoolean state){
+        cell.setState(state);
+        patternCells.add(cell);
+    }
+
+    public void cornerPattern(Cell cell, MyBoolean state){
+        if (cornerCells.contains(cell)) {
+            setStateForCell(cell, state);
         }
     }
 
-    public ArrayList<Node> getCornerNodes() {
-        ArrayList<Node> cornerNodes = new ArrayList<>();
-        for (Node node : grid.getFlattenedNodes()) {
-            if (node.getConnectedBorders().size() == 2) {
-                cornerNodes.add(node);
-            }
-        }
-        return cornerNodes;
+    public ArrayList<Cell> getCornerCells() {
+        ArrayList <Cell> cornerCells = new ArrayList<>();
+        cornerCells.add(grid.getCells().getFirst().getFirst());
+        cornerCells.add(grid.getCells().getFirst().getLast());
+        cornerCells.add(grid.getCells().getLast().getFirst());
+        cornerCells.add(grid.getCells().getLast().getLast());
+        return cornerCells;
     }
+
+    public Cell getRandomUnidentifiedCell(){
+        Random rand = new Random();
+        List<Cell> unidentifiedCells = grid.getFlattenedCells().stream().filter(cell -> !cell.hasState()).toList();
+        if (unidentifiedCells.isEmpty()) {
+            return null;
+        }
+        return unidentifiedCells.get(rand.nextInt(unidentifiedCells.size()));
+    }
+
+
 }

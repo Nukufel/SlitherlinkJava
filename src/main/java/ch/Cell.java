@@ -118,6 +118,12 @@ public class Cell {
         return false;
     }
 
+    public boolean hasState(){
+        if (state == MyBoolean.NONE) {
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public boolean equals(Object o) {

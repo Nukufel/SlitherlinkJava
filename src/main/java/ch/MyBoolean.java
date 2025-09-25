@@ -1,5 +1,7 @@
 package ch;
 
+import java.util.ArrayList;
+
 public enum MyBoolean {
     TRUE, FALSE, NONE;
 
@@ -9,5 +11,12 @@ public enum MyBoolean {
             case FALSE -> TRUE;
             default -> NONE;
         };
+    }
+
+    public static ArrayList<MyBoolean> validStates(){
+        ArrayList<MyBoolean> list = new ArrayList<>();
+        list.add(MyBoolean.TRUE);
+        list.add(MyBoolean.FALSE);
+        return list;
     }
 }

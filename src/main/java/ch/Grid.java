@@ -30,7 +30,7 @@ public class Grid {
         setResultBoardersForAllCells();
         setNumberForAllCells();
 
-        removeNumbersForFinalGrid();
+        //removeNumbersForFinalGrid();
     }
 
 

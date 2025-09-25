@@ -5,7 +5,7 @@ import javafx.util.Pair;
 import java.util.*;
 
 public class Settings {
-    public static long randomSeed = setRandomSeed(2);
+    public static long randomSeed = setRandomSeed(1);
     public static Random rand = new Random(randomSeed);
     public static int cellSize = 50;
     public static int gridRows = 3, gridCols = 3;
