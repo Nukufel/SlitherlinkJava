@@ -1,7 +1,6 @@
 package ch;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -21,32 +20,42 @@ public class Solver {
 
     public boolean hasSingleSolution() {
         scoutPatterns();
-        solve();
-        return true;
+        boolean solve = solve();
+        System.out.println(solve);
+        return !solve;
     }
 
     public boolean solve() {
 
-        Cell randomUnidentifiedCell = getRandomUnidentifiedCell();
-        if (randomUnidentifiedCell == null) {
-            return true;
+        Cell unidentifiedCell = getUnidentifiedCell();
+        if (unidentifiedCell == null) {
+            if (isOriginalSolution()){
+                return false;
+            }
+             return true;
         }
 
         for (MyBoolean state : MyBoolean.validStates()){
-            randomUnidentifiedCell.setState(state);
-            if (true){ //some constraint
+            unidentifiedCell.setState(state);
+            if (isPossibleSolution()){
                 if (solve()){
                     return true;
                 }
             }
         }
 
-        randomUnidentifiedCell.setState(MyBoolean.NONE);
+        unidentifiedCell.setState(MyBoolean.NONE);
         return false;
     }
 
-    public boolean isValidGrid() {
-
+    public boolean isPossibleSolution() {
+        for (Cell cell : grid.getFlattenedCells()){
+            if (!isCellStateValid(cell)){
+                return false;
+            }
+        }
+        //test if none are seperated
+        return true;
     }
 
     public void scoutPatterns(){
@@ -101,14 +110,96 @@ public class Solver {
         return cornerCells;
     }
 
-    public Cell getRandomUnidentifiedCell(){
-        Random rand = new Random();
+    public Cell getUnidentifiedCell(){
         List<Cell> unidentifiedCells = grid.getFlattenedCells().stream().filter(cell -> !cell.hasState()).toList();
         if (unidentifiedCells.isEmpty()) {
             return null;
         }
-        return unidentifiedCells.get(rand.nextInt(unidentifiedCells.size()));
+        return unidentifiedCells.getFirst();
     }
 
+    public int countInsideCells(){
+        int count = 0;
+        for (Cell cell : grid.getFlattenedCells()) {
+            if (cell.hasState()) {
+                count++;
+            }
+        }
+        return count;
+    }
 
+    public boolean isCellStateValid(Cell cell){
+        int insideCount = countInsideAdjacentCells(cell);
+        int outsideCount = countOutsideAdjacentCells(cell);
+
+        if (cell.getValue() == null){
+            return true;
+        }
+
+        int cellValue = cell.getValue();
+        if (cell.getState() == MyBoolean.TRUE) {
+            if (cellValue == 3 && insideCount > 1){
+                return false;
+            }
+            else if (cellValue == 1 && outsideCount > 1){
+                return false;
+            }
+            else if (cellValue == 0 && outsideCount > 0){
+                return false;
+            }
+        } else if (cell.getState() == MyBoolean.FALSE) {
+            if (cellValue == 3 && outsideCount > 1){
+                return false;
+            }
+            else if (cellValue == 1 && insideCount > 1){
+                return false;
+            }
+            else if (cellValue == 0 && insideCount > 0){
+                return false;
+            }
+        } else {
+            if ((cellValue == 1 || cellValue == 3) && ((insideCount > 1 && outsideCount > 1) || (insideCount > 3 || outsideCount > 3))){
+                return false;
+            }
+            if (cellValue == 0 && insideCount > 0 && outsideCount > 0) {
+                return false;
+            }
+        }
+        if (cellValue == 2 && insideCount > 2 || outsideCount > 2){
+            return false;
+        }
+        return true;
+    }
+
+    public int countInsideAdjacentCells(Cell cell){
+        int count = 0;
+        for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+            if (adjacentCell.getState() == MyBoolean.TRUE) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int countOutsideAdjacentCells(Cell cell){
+        int count = 4;
+        ArrayList<Cell> adjacentCells = grid.getAdjacentCells(cell);
+        for (Cell adjacentCell : adjacentCells) {
+            if (adjacentCell.getState() == MyBoolean.FALSE) {
+                count++;
+            }
+        }
+        return count - adjacentCells.size();
+    }
+
+    public boolean isOriginalSolution(){
+        for (int i = 0; i < Settings.gridRows; i++){
+            for (int j = 0; j < Settings.gridCols; j++){
+                if (grid.getCells().get(i).get(j).getState() != originalGrid.getCells().get(i).get(j).getState()){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

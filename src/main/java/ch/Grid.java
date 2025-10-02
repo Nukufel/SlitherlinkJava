@@ -30,7 +30,7 @@ public class Grid {
         setResultBoardersForAllCells();
         setNumberForAllCells();
 
-        //removeNumbersForFinalGrid();
+        removeNumbersForFinalGrid();
     }
 
 
@@ -308,9 +308,7 @@ public class Grid {
         cellsWithNumbersRemoved.add(randomNumberedCell);
 
         if (solver.hasSingleSolution()) {
-            if (removeNumber(solver, removeAmount - 1, randomNumberedCell, rand) != null) {
-                return cellsWithNumbersRemoved;
-            }
+            return removeNumber(solver, removeAmount - 1, randomNumberedCell, rand);
         }
 
         cellsWithNumbersRemoved.remove(randomNumberedCell);

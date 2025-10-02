@@ -15,7 +15,7 @@ public class Settings {
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
     //public static int removeAmount = (int) (cellCount * 0.6);
-    public static int removeAmount = 2;
+    public static int removeAmount = 3;
 
 
     private static long setRandomSeed(Integer seed) {
