@@ -7,16 +7,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Grid {
-    private ArrayList<ArrayList<Cell>> cells = new ArrayList<>();
+    private int boarderCount = 0;
+
+    private ArrayList<ArrayList<Cell>> cells = new ArrayList<>();;
     private ArrayList<Border> borders = new ArrayList<>();
+    private ArrayList<ArrayList<Node>> nodes;
+
+    private final Random rand;
     private final ArrayList<Cell> insideCells = new ArrayList<>();
-    private final ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
-    private ArrayList<ArrayList<Node>> nodes = initializeNodes();
-    private final Random rand = Settings.rand;
-    private Integer boarderCount = 0;
 
 
-    public Grid() {
+    public Grid(int size, double removePercentage, Integer seed) {
+        new Settings(size, removePercentage, seed);
+        this.rand = Settings.rand;
+        this.nodes = initializeNodes();
+
         initializeBorders();
         initializeNodes();
         initializeCells();
@@ -29,10 +34,13 @@ public class Grid {
         setNumberForAllCells();
 
         removeNumbersForFinalGrid();
+        System.out.println("end");
     }
 
 
     public Grid(Grid other) {
+        this.rand = Settings.rand;
+
         this.nodes = new ArrayList<>();
         for (ArrayList<Node> col : other.nodes) {
             var newCol = new ArrayList<Node>();
@@ -243,7 +251,7 @@ public class Grid {
     }
 
     public void removeNumbersForFinalGrid(){
-        final int threadCount =  1; //Settings.gridRows;
+        final int threadCount =  1; //settings.gridRows;
         final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
         boolean isDone = false;
 

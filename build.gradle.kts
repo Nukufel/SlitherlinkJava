@@ -27,7 +27,7 @@ javafx {
 tasks.register<JavaExec>("run") {
     group = "application"
     description = "Run JavaFx application"
-    mainClass.set("ch.Ui")  // Change this to your main Java class
+    mainClass.set("ch.Grid")  // Change this to your main Java class
     classpath = sourceSets["main"].runtimeClasspath
     jvmArgs = listOf(
         "--module-path", classpath.asPath,
