@@ -4,24 +4,32 @@ package ch;
 import java.util.*;
 
 public class Settings {
-    public static long randomSeed = setRandomSeed(1);
-    public static Random rand = new Random(randomSeed);
+    public static Random rand;
+
     public static int cellSize = 50;
-    public static int gridRows = 10, gridCols = 10;
-    public static int cellCount = gridRows * gridCols;
-    public static int failCount = 2000;
-    public static LinkedHashMap<String, Integer> directions = calculateDirections();
-    public static float[] insidePercentageRange = {58, 60};
-    public static float insidePercentage = calculateInsidePercentage(rand);
-    public static int removeAmount = (int) (cellCount * 0.5);
+    public static int gridRows, gridCols;
+    public static int cellCount;
+    public static double removePercentage;
 
+    public static int failCount;
+    public static LinkedHashMap<String, Integer> directions;
+    public static float[] insidePercentageRange;
+    public static float insidePercentage;
+    public static int removeAmount;
 
-    private static long setRandomSeed(Integer seed) {
-        if (seed != null){
-            return seed;
-        }
-        Random random = new Random();
-        return random.nextLong();
+    public Settings(int size, double removePercent, long seed) {
+        gridRows = size;
+        gridCols = size;
+        cellCount = size * size;
+        removePercentage = removePercent;
+
+        rand = new Random(seed);
+
+        removeAmount = (int) (cellCount * removePercentage);
+        directions = calculateDirections();
+        failCount = 2000;
+        insidePercentageRange = new float[] {58, 60};
+        insidePercentage = calculateInsidePercentage(rand);
     }
 
     public static LinkedHashMap<String, Integer> calculateDirections(){

@@ -1,22 +1,23 @@
 package ch;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class Grid {
     private ArrayList<ArrayList<Cell>> cells = new ArrayList<>();
     private ArrayList<Border> borders = new ArrayList<>();
     private final ArrayList<Cell> insideCells = new ArrayList<>();
-    private final ArrayList<Cell> cellsWithNumbersRemoved = new ArrayList<>();
-    private ArrayList<ArrayList<Node>> nodes = initializeNodes();
-    private final Random rand = Settings.rand;
+
+    private ArrayList<ArrayList<Node>> nodes;
+    private final Random rand;
     private Integer boarderCount = 0;
 
 
     public Grid() {
+        new Settings(25,0.4, 1);
+
+        rand = Settings.rand;
+        this.nodes = initializeNodes();
+
         initializeBorders();
         initializeNodes();
         initializeCells();
@@ -31,8 +32,9 @@ public class Grid {
         removeNumbersForFinalGrid();
     }
 
-
     public Grid(Grid other) {
+        this.rand = Settings.rand;
+
         this.nodes = new ArrayList<>();
         for (ArrayList<Node> col : other.nodes) {
             var newCol = new ArrayList<Node>();
@@ -242,35 +244,14 @@ public class Grid {
         }
     }
 
-    public void removeNumbersForFinalGrid(){
-        final int threadCount =  1; //Settings.gridRows;
-        final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        boolean isDone = false;
+    public void removeNumbersForFinalGrid() {
+        Random random = Settings.rand;
 
-        try{
-            List<Future<ArrayList<Cell>>> futures = new ArrayList<>();
+        ArrayList<Cell> result = getNumbersToRemove(random);
 
-            for (int i = 0; i < threadCount; i++) {
-                Random random = new Random(Settings.randomSeed + i);
-                RemovalWorker removalWorker = new RemovalWorker(this, random);
-                futures.add(executor.submit(removalWorker));
-            }
-
-            for (Future<ArrayList<Cell>> future : futures) {
-                ArrayList<Cell> result = future.get(); // waits for the result
-                if (result != null && !result.isEmpty()) {
-                    setNumbersInvisible(result);
-                    isDone = true;
-                    break;
-                }
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.getCause().printStackTrace();
-        } finally {
-            executor.shutdownNow();
-        }
-
-        if (!isDone) {
+        if (result != null && !result.isEmpty()) {
+            setNumbersInvisible(result);
+        } else {
             System.out.println("Failed to remove numbers, no unique solution");
         }
     }
