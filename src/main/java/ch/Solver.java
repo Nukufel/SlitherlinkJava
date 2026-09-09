@@ -2,9 +2,14 @@ package ch;
 
 import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.IdentityHashMap;
 
 public class Solver {
     private final Grid grid;
+
+    private final ArrayList<Cell> allCells;
+    private final IdentityHashMap<Cell, ArrayList<Cell>> neighbors =
+            new IdentityHashMap<>();
 
     private final ArrayList<Cell> cornerCells;
     private final ArrayList<Cell> trail = new ArrayList<>();
@@ -14,9 +19,15 @@ public class Solver {
     public Solver(Grid grid) {
         this.grid = grid;
 
-        grid.setCellsUnidentified();
-
+        allCells = grid.getFlattenedCells();
         cornerCells = getCornerCells();
+
+        for (Cell cell : allCells) {
+            neighbors.put(
+                    cell,
+                    grid.getAdjacentCells(cell)
+            );
+        }
     }
 
     public boolean hasSingleSolution() {
@@ -25,7 +36,7 @@ public class Solver {
         trail.clear();
         contradiction = false;
 
-        if (!propagate()) {
+        if (!solve()) {
             return false;
         }
 
@@ -60,7 +71,7 @@ public class Solver {
 
             setStateForCell(unidentifiedCell, state);
 
-            if (!contradiction && propagate()) {
+            if (!contradiction && solve()) {
 
                 solutionCount += countSolutions(
                         limit - solutionCount
@@ -78,7 +89,7 @@ public class Solver {
         return solutionCount;
     }
 
-    private boolean propagate() {
+    private boolean solve() {
         boolean changed;
 
         do {
@@ -94,7 +105,7 @@ public class Solver {
     }
 
     private boolean isGridValid() {
-        for (Cell cell : grid.getFlattenedCells()) {
+        for (Cell cell : allCells) {
 
             if (!cell.hasState()) {
                 return false;
@@ -271,7 +282,7 @@ public class Solver {
 
         MyBoolean state = cell.getState();
 
-        ArrayList<Cell> adjacentCells = grid.getAdjacentCells(cell);
+        ArrayList<Cell> adjacentCells = getNeighbors(cell);
 
         for (Cell adjacentCell : adjacentCells) {
             if (adjacentCell.getState() != state) {
@@ -289,23 +300,135 @@ public class Solver {
     public boolean scoutPatterns() {
         boolean changed = false;
 
-        for (Cell cell : grid.getFlattenedCells()) {
+        for (Cell cell : allCells) {
 
             if (!cell.hasValue()) {
                 continue;
             }
 
-            if (cell.getValue() == 0) {
-                changed |= zeroPatterns(cell);
+            switch (cell.getValue()) {
+                case 0 -> changed |= zeroPatterns(cell);
+                case 1 -> changed |= onePatterns(cell);
+                case 2 -> changed |= twoPatterns(cell);
+                case 3 -> changed |= threePatterns(cell);
             }
-            else if (cell.getValue() == 1) {
-                changed |= onePatterns(cell);
+
+            changed |= statePatterns(cell);
+
+            if (contradiction) {
+                return changed;
             }
-            else if (cell.getValue() == 2) {
-                changed |= twoPatterns(cell);
+        }
+
+        return changed;
+    }
+
+    private boolean statePatterns(Cell clueCell) {
+        ArrayList<Cell> localCells = new ArrayList<>(5);
+
+        // Index 0 is always the clue cell itself
+        localCells.add(clueCell);
+        localCells.addAll(getNeighbors(clueCell));
+
+        int count = localCells.size();
+        int combinations = 1 << count;
+        int fullMask = combinations - 1;
+
+        int validCount = 0;
+
+        // Bits that remain set here are TRUE in every valid combination
+        int alwaysTrue = fullMask;
+
+        // Bits that remain set here are FALSE in every valid combination
+        int alwaysFalse = fullMask;
+
+        int clue = clueCell.getValue();
+        int neighborCount = count - 1;
+
+        for (int mask = 0; mask < combinations; mask++) {
+
+            boolean matchesKnownStates = true;
+
+            for (int i = 0; i < count; i++) {
+                Cell cell = localCells.get(i);
+
+                if (!cell.hasState()) {
+                    continue;
+                }
+
+                boolean candidateState =
+                        (mask & (1 << i)) != 0;
+
+                boolean actualState =
+                        cell.getState() == MyBoolean.TRUE;
+
+                if (candidateState != actualState) {
+                    matchesKnownStates = false;
+                    break;
+                }
             }
-            else if (cell.getValue() == 3) {
-                changed |= threePatterns(cell);
+
+            if (!matchesKnownStates) {
+                continue;
+            }
+
+            boolean centerInside = (mask & 1) != 0;
+
+            int edges = 0;
+
+            // Missing neighbors are exterior / OUTSIDE.
+            if (centerInside) {
+                edges += 4 - neighborCount;
+            }
+
+            for (int i = 1; i < count; i++) {
+                boolean neighborInside =
+                        (mask & (1 << i)) != 0;
+
+                if (neighborInside != centerInside) {
+                    edges++;
+                }
+            }
+
+            if (edges != clue) {
+                continue;
+            }
+
+            validCount++;
+
+            alwaysTrue &= mask;
+            alwaysFalse &= (~mask) & fullMask;
+        }
+
+        // No possible local arrangement satisfies this clue
+        if (validCount == 0) {
+            contradiction = true;
+            return false;
+        }
+
+        boolean changed = false;
+
+        for (int i = 0; i < count; i++) {
+
+            Cell cell = localCells.get(i);
+
+            if (cell.hasState()) {
+                continue;
+            }
+
+            int bit = 1 << i;
+
+            if ((alwaysTrue & bit) != 0) {
+                changed |= setStateForCell(
+                        cell,
+                        MyBoolean.TRUE
+                );
+            }
+            else if ((alwaysFalse & bit) != 0) {
+                changed |= setStateForCell(
+                        cell,
+                        MyBoolean.FALSE
+                );
             }
 
             if (contradiction) {
@@ -338,7 +461,7 @@ public class Solver {
             return true;
         }
 
-        for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+        for (Cell adjacentCell : getNeighbors(cell)) {
             if (!isCellStateValid(adjacentCell)) {
                 contradiction = true;
                 break;
@@ -358,13 +481,11 @@ public class Solver {
     }
 
 
-
-
     public Cell getUnidentifiedCell() {
         Cell bestCell = null;
         int bestScore = Integer.MIN_VALUE;
 
-        for (Cell cell : grid.getFlattenedCells()) {
+        for (Cell cell : allCells) {
 
             if (cell.hasState()) {
                 continue;
@@ -376,7 +497,7 @@ public class Solver {
                 score += 10;
             }
 
-            for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+            for (Cell adjacentCell : getNeighbors(cell)) {
 
                 if (adjacentCell.hasState()) {
                     score += 3;
@@ -417,7 +538,7 @@ public class Solver {
     }
 
     private boolean canReachClue(Cell cell, MyBoolean assumedState, int clue) {
-        ArrayList<Cell> adjacentCells = grid.getAdjacentCells(cell);
+        ArrayList<Cell> adjacentCells = getNeighbors(cell);
 
         int guaranteedEdges = 0;
         int unknownSides = 0;
@@ -451,7 +572,7 @@ public class Solver {
         changed |= cornerPattern(cell, MyBoolean.FALSE);
 
         if (!cell.hasState()) {
-            for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+            for (Cell adjacentCell : getNeighbors(cell)) {
                 if (adjacentCell.hasState()) {
                     changed |= setStateForCell(cell, adjacentCell.getState());
                     break;
@@ -503,11 +624,15 @@ public class Solver {
 
     private boolean colorAdjacentCells(Cell cell, MyBoolean value) {
         boolean changed = false;
-        for (Cell adjacentCell : grid.getAdjacentCells(cell)){
+        for (Cell adjacentCell : getNeighbors(cell)) {
             if (!adjacentCell.hasState()) {
                 changed |= setStateForCell(adjacentCell, value);
             }
         }
         return changed;
+    }
+
+    private ArrayList<Cell> getNeighbors(Cell cell) {
+        return neighbors.get(cell);
     }
 }

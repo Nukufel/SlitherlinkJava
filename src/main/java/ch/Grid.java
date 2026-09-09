@@ -276,73 +276,51 @@ public class Grid {
     }
 
     public ArrayList<Cell> getNumbersToRemove(Random rand) {
-        int removeAmount = Settings.removeAmount;
-        Grid copiedGrid = deepCopy();
-        var solver = new Solver(copiedGrid);
+        int target = Settings.removeAmount;
+        int maxRestarts = 20;
 
-        for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
-            ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null, rand);
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
+        for (int attempt = 0; attempt < maxRestarts; attempt++) {
+
+            Grid copiedGrid = deepCopy();
+            Solver solver = new Solver(copiedGrid);
+
+            ArrayList<Cell> candidates =
+                    new ArrayList<>(copiedGrid.getNumberedCells());
+
+            Collections.shuffle(candidates, rand);
+
+            ArrayList<Cell> removed = new ArrayList<>();
+
+            for (Cell cell : candidates) {
+
+                if (Thread.currentThread().isInterrupted()) {
+                    return null;
+                }
+
+                if (removed.size() >= target) {
+                    return removed;
+                }
+
+                Integer oldValue = cell.getValue();
+
+                // Temporarily remove clue
+                cell.setValue(null);
+
+                if (solver.hasSingleSolution()) {
+                    // Keep it removed
+                    removed.add(cell);
+                } else {
+                    // Removing it created multiple solutions
+                    cell.setValue(oldValue);
+                }
             }
 
-            if (cellsOfNumbersToRemove != null && !cellsOfNumbersToRemove.isEmpty()) {
-                return cellsOfNumbersToRemove;
+            if (removed.size() >= target) {
+                return removed;
             }
         }
 
         return null;
-    }
-
-    public ArrayList<Cell> removeNumber(
-            Solver solver,
-            int removeAmount,
-            Cell lastCell,
-            Random rand
-    ) {
-        if (removeAmount <= 0) {
-            return new ArrayList<>(cellsWithNumbersRemoved);
-        }
-
-        Cell randomNumberedCell =
-                getRandomNumberedCell(lastCell, rand);
-
-        Integer number = randomNumberedCell.getValue();
-
-        randomNumberedCell.setValue(null);
-        cellsWithNumbersRemoved.add(randomNumberedCell);
-
-        if (solver.hasSingleSolution()) {
-
-            ArrayList<Cell> result = removeNumber(
-                    solver,
-                    removeAmount - 1,
-                    randomNumberedCell,
-                    rand
-            );
-
-            // Deeper recursion succeeded
-            if (result != null) {
-                return result;
-            }
-        }
-
-        // Either this removal broke uniqueness
-        // OR a later removal failed.
-        // In BOTH cases restore this clue.
-        cellsWithNumbersRemoved.remove(randomNumberedCell);
-        randomNumberedCell.setValue(number);
-
-        return null;
-    }
-
-    public Cell getRandomNumberedCell(Cell lastCell, Random rand) {
-        List<Cell> numberedCells = getNumberedCells();
-        Cell cell = numberedCells.get(rand.nextInt(numberedCells.size() - 1));
-        if (lastCell != null && cell == lastCell && numberedCells.size() > 1) {
-            return getRandomNumberedCell(lastCell, rand);
-        }
-        return cell;
     }
 
     private List<Cell> getNumberedCells(){
@@ -531,18 +509,6 @@ public class Grid {
                 cell.setState(MyBoolean.NONE);
             }
         }
-    }
-
-    public ArrayList<Cell> getUnidentifiedCells() {
-        var unidentifiedCells = new ArrayList<Cell>();
-        for (ArrayList<Cell> col : cells) {
-            for (Cell cell : col) {
-                if (cell.getState() == MyBoolean.NONE) {
-                    unidentifiedCells.add(cell);
-                }
-            }
-        }
-        return unidentifiedCells;
     }
 
 
