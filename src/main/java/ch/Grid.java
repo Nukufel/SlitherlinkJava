@@ -1,10 +1,6 @@
 package ch;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class Grid {
     private int boarderCount = 0;
@@ -15,7 +11,6 @@ public class Grid {
 
     private final Random rand;
     private final ArrayList<Cell> insideCells = new ArrayList<>();
-
 
     public Grid(int size, double removePercentage, Integer seed) {
         new Settings(size, removePercentage, seed);
@@ -250,35 +245,14 @@ public class Grid {
         }
     }
 
-    public void removeNumbersForFinalGrid(){
-        final int threadCount =  1; //settings.gridRows;
-        final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        boolean isDone = false;
+    public void removeNumbersForFinalGrid() {
+        Random random = Settings.rand;
 
-        try{
-            List<Future<ArrayList<Cell>>> futures = new ArrayList<>();
+        ArrayList<Cell> result = getNumbersToRemove(random);
 
-            for (int i = 0; i < threadCount; i++) {
-                Random random = new Random(Settings.randomSeed + i);
-                RemovalWorker removalWorker = new RemovalWorker(this, random);
-                futures.add(executor.submit(removalWorker));
-            }
-
-            for (Future<ArrayList<Cell>> future : futures) {
-                ArrayList<Cell> result = future.get(); // waits for the result
-                if (result != null && !result.isEmpty()) {
-                    setNumbersInvisible(result);
-                    isDone = true;
-                    break;
-                }
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.getCause().printStackTrace();
-        } finally {
-            executor.shutdownNow();
-        }
-
-        if (!isDone) {
+        if (result != null && !result.isEmpty()) {
+            setNumbersInvisible(result);
+        } else {
             System.out.println("Failed to remove numbers, no unique solution");
         }
     }
