@@ -1,6 +1,5 @@
 package ch;
 
-import java.sql.SQLOutput;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -8,7 +7,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Grid {
-    private Stack<Action> actionStack = new Stack<>();
     private ArrayList<ArrayList<Cell>> cells = new ArrayList<>();
     private ArrayList<Border> borders = new ArrayList<>();
     private final ArrayList<Cell> insideCells = new ArrayList<>();
@@ -280,7 +278,7 @@ public class Grid {
     public ArrayList<Cell> getNumbersToRemove(Random rand) {
         int removeAmount = Settings.removeAmount;
         Grid copiedGrid = deepCopy();
-        var solver = new Solver(copiedGrid, this);
+        var solver = new Solver(copiedGrid);
 
         for (int i = 0; i < Math.pow(removeAmount, 5); i++) {
             ArrayList<Cell> cellsOfNumbersToRemove = copiedGrid.removeNumber(solver, removeAmount, null, rand);
@@ -296,26 +294,46 @@ public class Grid {
         return null;
     }
 
-    public ArrayList<Cell> removeNumber(Solver solver, int removeAmount, Cell lastCell, Random rand) {
+    public ArrayList<Cell> removeNumber(
+            Solver solver,
+            int removeAmount,
+            Cell lastCell,
+            Random rand
+    ) {
         if (removeAmount <= 0) {
-            return cellsWithNumbersRemoved;
+            return new ArrayList<>(cellsWithNumbersRemoved);
         }
 
-        Cell randomNumberedCell = getRandomNumberedCell(lastCell, rand);
-        Integer number =  randomNumberedCell.getValue();
+        Cell randomNumberedCell =
+                getRandomNumberedCell(lastCell, rand);
+
+        Integer number = randomNumberedCell.getValue();
 
         randomNumberedCell.setValue(null);
         cellsWithNumbersRemoved.add(randomNumberedCell);
 
         if (solver.hasSingleSolution()) {
-            return removeNumber(solver, removeAmount - 1, randomNumberedCell, rand);
+
+            ArrayList<Cell> result = removeNumber(
+                    solver,
+                    removeAmount - 1,
+                    randomNumberedCell,
+                    rand
+            );
+
+            // Deeper recursion succeeded
+            if (result != null) {
+                return result;
+            }
         }
 
+        // Either this removal broke uniqueness
+        // OR a later removal failed.
+        // In BOTH cases restore this clue.
         cellsWithNumbersRemoved.remove(randomNumberedCell);
         randomNumberedCell.setValue(number);
 
         return null;
-
     }
 
     public Cell getRandomNumberedCell(Cell lastCell, Random rand) {
@@ -558,13 +576,5 @@ public class Grid {
 
     public void setNodes(ArrayList<ArrayList<Node>> nodes) {
         this.nodes = nodes;
-    }
-
-    public Stack<Action> getActionStack() {
-        return actionStack;
-    }
-
-    public void setActionStack(Stack<Action> actionStack) {
-        this.actionStack = actionStack;
     }
 }

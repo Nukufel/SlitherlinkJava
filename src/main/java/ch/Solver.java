@@ -1,104 +1,381 @@
 package ch;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.ArrayDeque;
 
 public class Solver {
-    private Grid grid;
-    private Grid originalGrid;
-    ArrayList<Cell> cornerCells;
-    ArrayList<Cell> patternCells;
+    private final Grid grid;
 
-    public Solver(Grid grid, Grid originalGrid)  {
+    private final ArrayList<Cell> cornerCells;
+    private final ArrayList<Cell> trail = new ArrayList<>();
+
+    private boolean contradiction = false;
+
+    public Solver(Grid grid) {
         this.grid = grid;
-        this.originalGrid = originalGrid;
+
         grid.setCellsUnidentified();
+
         cornerCells = getCornerCells();
-        patternCells = new ArrayList<>();
     }
 
     public boolean hasSingleSolution() {
-        scoutPatterns();
-        boolean solve = solve();
-        System.out.println(solve);
-        return !solve;
+        grid.setCellsUnidentified();
+
+        trail.clear();
+        contradiction = false;
+
+        if (!propagate()) {
+            return false;
+        }
+
+        trail.clear();
+
+        int solutions = countSolutions(2);
+
+        return solutions == 1;
     }
 
-    public boolean solve() {
+    private int countSolutions(int limit) {
+        if (contradiction) {
+            return 0;
+        }
 
         Cell unidentifiedCell = getUnidentifiedCell();
+
+        // Complete assignment
         if (unidentifiedCell == null) {
-            if (isOriginalSolution()){
-                return false;
+            if (isGridValid()) {
+                return 1;
             }
-             return true;
+
+            return 0;
         }
 
-        for (MyBoolean state : MyBoolean.validStates()){
-            unidentifiedCell.setState(state);
-            if (isPossibleSolution()){
-                if (solve()){
-                    return true;
-                }
+        int solutionCount = 0;
+
+        for (MyBoolean state : MyBoolean.validStates()) {
+
+            int mark = trail.size();
+
+            setStateForCell(unidentifiedCell, state);
+
+            if (!contradiction && propagate()) {
+
+                solutionCount += countSolutions(
+                        limit - solutionCount
+                );
+            }
+
+            rollback(mark);
+
+            // We already know it's not unique
+            if (solutionCount >= limit) {
+                return solutionCount;
             }
         }
 
-        unidentifiedCell.setState(MyBoolean.NONE);
-        return false;
+        return solutionCount;
     }
 
-    public boolean isPossibleSolution() {
-        for (Cell cell : grid.getFlattenedCells()){
-            if (!isCellStateValid(cell)){
+    private boolean propagate() {
+        boolean changed;
+
+        do {
+            changed = scoutPatterns();
+
+            if (contradiction) {
                 return false;
             }
-        }
-        //test if none are seperated
+
+        } while (changed);
+
         return true;
     }
 
-    public void scoutPatterns(){
+    private boolean isGridValid() {
         for (Cell cell : grid.getFlattenedCells()) {
-            if (cell.hasValue()){
-                if (cell.getValue() == 0){
-                    zeroPatterns(cell);
-                } else if (cell.getValue() == 1){
-                    onePatterns(cell);
-                } else if (cell.getValue() == 2){
 
-                } else {
-                    threePatterns(cell);
+            if (!cell.hasState()) {
+                return false;
+            }
+
+            if (cell.hasValue()) {
+                int actualEdges = countLoopEdgesAroundCell(cell);
+
+                if (actualEdges != cell.getValue()) {
+                    return false;
                 }
             }
         }
+
+        return hasSingleLoop();
     }
 
-    public void zeroPatterns(Cell cell){
-        cornerPattern(cell, MyBoolean.FALSE);
-    }
+    private boolean hasSingleLoop() {
+        int rows = Settings.gridRows;
+        int cols = Settings.gridCols;
 
-    public void onePatterns(Cell cell){
-        cornerPattern(cell, MyBoolean.FALSE);
-    }
+        boolean[][] horizontal = new boolean[rows + 1][cols];
+        boolean[][] vertical = new boolean[rows][cols + 1];
 
-    public void towPatterns(Cell cell){
+        // Build loop edges from INSIDE / OUTSIDE differences
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
 
-    }
+                boolean inside =
+                        grid.getCells().get(row).get(col).getState()
+                                == MyBoolean.TRUE;
 
-    public void threePatterns(Cell cell){
-        cornerPattern(cell, MyBoolean.TRUE);
-    }
+                boolean above =
+                        row > 0 &&
+                                grid.getCells().get(row - 1).get(col).getState()
+                                        == MyBoolean.TRUE;
 
-    public void setStateForCell(Cell cell, MyBoolean state){
-        cell.setState(state);
-        patternCells.add(cell);
-    }
+                boolean below =
+                        row < rows - 1 &&
+                                grid.getCells().get(row + 1).get(col).getState()
+                                        == MyBoolean.TRUE;
 
-    public void cornerPattern(Cell cell, MyBoolean state){
-        if (cornerCells.contains(cell)) {
-            setStateForCell(cell, state);
+                boolean left =
+                        col > 0 &&
+                                grid.getCells().get(row).get(col - 1).getState()
+                                        == MyBoolean.TRUE;
+
+                boolean right =
+                        col < cols - 1 &&
+                                grid.getCells().get(row).get(col + 1).getState()
+                                        == MyBoolean.TRUE;
+
+                horizontal[row][col] = inside != above;
+                horizontal[row + 1][col] = inside != below;
+
+                vertical[row][col] = inside != left;
+                vertical[row][col + 1] = inside != right;
+            }
         }
+
+        int[][] degree = new int[rows + 1][cols + 1];
+
+        int edgeCount = 0;
+
+        // Horizontal edges
+        for (int row = 0; row <= rows; row++) {
+            for (int col = 0; col < cols; col++) {
+
+                if (horizontal[row][col]) {
+                    degree[row][col]++;
+                    degree[row][col + 1]++;
+                    edgeCount++;
+                }
+            }
+        }
+
+        // Vertical edges
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col <= cols; col++) {
+
+                if (vertical[row][col]) {
+                    degree[row][col]++;
+                    degree[row + 1][col]++;
+                    edgeCount++;
+                }
+            }
+        }
+
+        if (edgeCount == 0) {
+            return false;
+        }
+
+        int startRow = -1;
+        int startCol = -1;
+        int activeVertices = 0;
+
+        // Every loop vertex must have degree exactly 2
+        for (int row = 0; row <= rows; row++) {
+            for (int col = 0; col <= cols; col++) {
+
+                if (degree[row][col] != 0 &&
+                        degree[row][col] != 2) {
+                    return false;
+                }
+
+                if (degree[row][col] == 2) {
+                    activeVertices++;
+
+                    if (startRow == -1) {
+                        startRow = row;
+                        startCol = col;
+                    }
+                }
+            }
+        }
+
+        boolean[][] visited =
+                new boolean[rows + 1][cols + 1];
+
+        ArrayDeque<int[]> queue = new ArrayDeque<>();
+
+        queue.add(new int[]{startRow, startCol});
+        visited[startRow][startCol] = true;
+
+        int visitedVertices = 0;
+
+        while (!queue.isEmpty()) {
+
+            int[] vertex = queue.removeFirst();
+
+            int row = vertex[0];
+            int col = vertex[1];
+
+            visitedVertices++;
+
+            // Left
+            if (col > 0 && horizontal[row][col - 1]) {
+                addVertex(queue, visited, row, col - 1);
+            }
+
+            // Right
+            if (col < cols && horizontal[row][col]) {
+                addVertex(queue, visited, row, col + 1);
+            }
+
+            // Up
+            if (row > 0 && vertical[row - 1][col]) {
+                addVertex(queue, visited, row - 1, col);
+            }
+
+            // Down
+            if (row < rows && vertical[row][col]) {
+                addVertex(queue, visited, row + 1, col);
+            }
+        }
+
+        return visitedVertices == activeVertices;
+    }
+
+    private void addVertex(
+            ArrayDeque<int[]> queue,
+            boolean[][] visited,
+            int row,
+            int col
+    ) {
+        if (!visited[row][col]) {
+            visited[row][col] = true;
+            queue.addLast(new int[]{row, col});
+        }
+    }
+
+    private int countLoopEdgesAroundCell(Cell cell) {
+        int edges = 0;
+
+        MyBoolean state = cell.getState();
+
+        ArrayList<Cell> adjacentCells = grid.getAdjacentCells(cell);
+
+        for (Cell adjacentCell : adjacentCells) {
+            if (adjacentCell.getState() != state) {
+                edges++;
+            }
+        }
+
+        if (state == MyBoolean.TRUE) {
+            edges += 4 - adjacentCells.size();
+        }
+
+        return edges;
+    }
+
+    public boolean scoutPatterns() {
+        boolean changed = false;
+
+        for (Cell cell : grid.getFlattenedCells()) {
+
+            if (!cell.hasValue()) {
+                continue;
+            }
+
+            if (cell.getValue() == 0) {
+                changed |= zeroPatterns(cell);
+            }
+            else if (cell.getValue() == 1) {
+                changed |= onePatterns(cell);
+            }
+            else if (cell.getValue() == 2) {
+                changed |= twoPatterns(cell);
+            }
+            else if (cell.getValue() == 3) {
+                changed |= threePatterns(cell);
+            }
+
+            if (contradiction) {
+                return changed;
+            }
+        }
+
+        return changed;
+    }
+
+    public boolean zeroPatterns(Cell cell){
+        return cornerPattern(cell, MyBoolean.FALSE);
+    }
+
+    public boolean onePatterns(Cell cell){
+        return cornerPattern(cell, MyBoolean.FALSE);
+    }
+
+    public boolean twoPatterns(Cell cell){ return false;}
+
+    public boolean threePatterns(Cell cell){
+        return cornerPattern(cell, MyBoolean.TRUE);
+    }
+
+    public boolean setStateForCell(Cell cell, MyBoolean state) {
+        MyBoolean currentState = cell.getState();
+
+        if (currentState == state) {
+            return false;
+        }
+
+        if (currentState != MyBoolean.NONE) {
+            contradiction = true;
+            return false;
+        }
+
+        trail.add(cell);
+        cell.setState(state);
+
+        if (!isCellStateValid(cell)) {
+            contradiction = true;
+            return true;
+        }
+
+        for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+            if (!isCellStateValid(adjacentCell)) {
+                contradiction = true;
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    private void rollback(int mark) {
+        while (trail.size() > mark) {
+            Cell cell = trail.removeLast();
+            cell.setState(MyBoolean.NONE);
+        }
+
+        contradiction = false;
+    }
+
+
+    public boolean cornerPattern(Cell cell, MyBoolean state) {
+        if (!cornerCells.contains(cell)) {
+            return false;
+        }
+
+        return setStateForCell(cell, state);
     }
 
     public ArrayList<Cell> getCornerCells() {
@@ -110,96 +387,86 @@ public class Solver {
         return cornerCells;
     }
 
-    public Cell getUnidentifiedCell(){
-        List<Cell> unidentifiedCells = grid.getFlattenedCells().stream().filter(cell -> !cell.hasState()).toList();
-        if (unidentifiedCells.isEmpty()) {
-            return null;
-        }
-        return unidentifiedCells.getFirst();
-    }
+    public Cell getUnidentifiedCell() {
+        Cell bestCell = null;
+        int bestScore = Integer.MIN_VALUE;
 
-    public int countInsideCells(){
-        int count = 0;
         for (Cell cell : grid.getFlattenedCells()) {
+
             if (cell.hasState()) {
-                count++;
+                continue;
+            }
+
+            int score = 0;
+
+            if (cell.hasValue()) {
+                score += 10;
+            }
+
+            for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+
+                if (adjacentCell.hasState()) {
+                    score += 3;
+                }
+
+                if (adjacentCell.hasValue()) {
+                    score += 2;
+                }
+            }
+
+            if (cornerCells.contains(cell)) {
+                score += 2;
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestCell = cell;
             }
         }
-        return count;
+
+        return bestCell;
     }
 
-    public boolean isCellStateValid(Cell cell){
-        int insideCount = countInsideAdjacentCells(cell);
-        int outsideCount = countOutsideAdjacentCells(cell);
 
-        if (cell.getValue() == null){
+    public boolean isCellStateValid(Cell cell) {
+        if (!cell.hasValue()) {
             return true;
         }
 
-        int cellValue = cell.getValue();
-        if (cell.getState() == MyBoolean.TRUE) {
-            if (cellValue == 3 && insideCount > 1){
-                return false;
-            }
-            else if (cellValue == 1 && outsideCount > 1){
-                return false;
-            }
-            else if (cellValue == 0 && outsideCount > 0){
-                return false;
-            }
-        } else if (cell.getState() == MyBoolean.FALSE) {
-            if (cellValue == 3 && outsideCount > 1){
-                return false;
-            }
-            else if (cellValue == 1 && insideCount > 1){
-                return false;
-            }
-            else if (cellValue == 0 && insideCount > 0){
-                return false;
-            }
-        } else {
-            if ((cellValue == 1 || cellValue == 3) && ((insideCount > 1 && outsideCount > 1) || (insideCount > 3 || outsideCount > 3))){
-                return false;
-            }
-            if (cellValue == 0 && insideCount > 0 && outsideCount > 0) {
-                return false;
-            }
+        int clue = cell.getValue();
+
+        if (cell.hasState()) {
+            return canReachClue(cell, cell.getState(), clue);
         }
-        if (cellValue == 2 && insideCount > 2 || outsideCount > 2){
-            return false;
-        }
-        return true;
+
+        return canReachClue(cell, MyBoolean.TRUE, clue)
+                || canReachClue(cell, MyBoolean.FALSE, clue);
     }
 
-    public int countInsideAdjacentCells(Cell cell){
-        int count = 0;
-        for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
-            if (adjacentCell.getState() == MyBoolean.TRUE) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public int countOutsideAdjacentCells(Cell cell){
-        int count = 4;
+    private boolean canReachClue(Cell cell, MyBoolean assumedState, int clue) {
         ArrayList<Cell> adjacentCells = grid.getAdjacentCells(cell);
-        for (Cell adjacentCell : adjacentCells) {
-            if (adjacentCell.getState() == MyBoolean.FALSE) {
-                count++;
-            }
-        }
-        return count - adjacentCells.size();
-    }
 
-    public boolean isOriginalSolution(){
-        for (int i = 0; i < Settings.gridRows; i++){
-            for (int j = 0; j < Settings.gridCols; j++){
-                if (grid.getCells().get(i).get(j).getState() != originalGrid.getCells().get(i).get(j).getState()){
-                    return false;
-                }
+        int guaranteedEdges = 0;
+        int unknownSides = 0;
+
+        // Outside of board is OUTSIDE
+        int exteriorSides = 4 - adjacentCells.size();
+
+        if (assumedState == MyBoolean.TRUE) {
+            guaranteedEdges += exteriorSides;
+        }
+
+        for (Cell adjacentCell : adjacentCells) {
+
+            if (!adjacentCell.hasState()) {
+                unknownSides++;
+            } else if (adjacentCell.getState() != assumedState) {
+                guaranteedEdges++;
             }
         }
-        return true;
+
+        int maxEdges = guaranteedEdges + unknownSides;
+
+        return clue >= guaranteedEdges && clue <= maxEdges;
     }
 }
