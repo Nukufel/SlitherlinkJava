@@ -316,19 +316,7 @@ public class Solver {
         return changed;
     }
 
-    public boolean zeroPatterns(Cell cell){
-        return cornerPattern(cell, MyBoolean.FALSE);
-    }
 
-    public boolean onePatterns(Cell cell){
-        return cornerPattern(cell, MyBoolean.FALSE);
-    }
-
-    public boolean twoPatterns(Cell cell){ return false;}
-
-    public boolean threePatterns(Cell cell){
-        return cornerPattern(cell, MyBoolean.TRUE);
-    }
 
     public boolean setStateForCell(Cell cell, MyBoolean state) {
         MyBoolean currentState = cell.getState();
@@ -370,22 +358,7 @@ public class Solver {
     }
 
 
-    public boolean cornerPattern(Cell cell, MyBoolean state) {
-        if (!cornerCells.contains(cell)) {
-            return false;
-        }
 
-        return setStateForCell(cell, state);
-    }
-
-    public ArrayList<Cell> getCornerCells() {
-        ArrayList <Cell> cornerCells = new ArrayList<>();
-        cornerCells.add(grid.getCells().getFirst().getFirst());
-        cornerCells.add(grid.getCells().getFirst().getLast());
-        cornerCells.add(grid.getCells().getLast().getFirst());
-        cornerCells.add(grid.getCells().getLast().getLast());
-        return cornerCells;
-    }
 
     public Cell getUnidentifiedCell() {
         Cell bestCell = null;
@@ -468,5 +441,73 @@ public class Solver {
         int maxEdges = guaranteedEdges + unknownSides;
 
         return clue >= guaranteedEdges && clue <= maxEdges;
+    }
+
+    //PATTERNS -->
+
+    public boolean zeroPatterns(Cell cell){
+        boolean changed = false;
+
+        changed |= cornerPattern(cell, MyBoolean.FALSE);
+
+        if (!cell.hasState()) {
+            for (Cell adjacentCell : grid.getAdjacentCells(cell)) {
+                if (adjacentCell.hasState()) {
+                    changed |= setStateForCell(cell, adjacentCell.getState());
+                    break;
+                }
+            }
+        }
+
+        if (cell.hasState()) {
+            changed |= colorAdjacentCells(cell, cell.getState());
+        }
+        return changed;
+    }
+
+    public boolean onePatterns(Cell cell){
+        boolean changed = false;
+
+        changed |= cornerPattern(cell, MyBoolean.FALSE);
+
+        return changed;
+    }
+
+    public boolean twoPatterns(Cell cell){
+        return false;
+    }
+
+    public boolean threePatterns(Cell cell){
+        boolean changed = false;
+
+        changed |= cornerPattern(cell, MyBoolean.TRUE);
+
+        return changed;
+    }
+
+    public boolean cornerPattern(Cell cell, MyBoolean state) {
+        if (!cornerCells.contains(cell)) {
+            return false;
+        }
+        return setStateForCell(cell, state);
+    }
+
+    public ArrayList<Cell> getCornerCells() {
+        ArrayList <Cell> cornerCells = new ArrayList<>();
+        cornerCells.add(grid.getCells().getFirst().getFirst());
+        cornerCells.add(grid.getCells().getFirst().getLast());
+        cornerCells.add(grid.getCells().getLast().getFirst());
+        cornerCells.add(grid.getCells().getLast().getLast());
+        return cornerCells;
+    }
+
+    private boolean colorAdjacentCells(Cell cell, MyBoolean value) {
+        boolean changed = false;
+        for (Cell adjacentCell : grid.getAdjacentCells(cell)){
+            if (!adjacentCell.hasState()) {
+                changed |= setStateForCell(adjacentCell, value);
+            }
+        }
+        return changed;
     }
 }

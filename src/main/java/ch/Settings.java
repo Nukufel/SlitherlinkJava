@@ -13,7 +13,7 @@ public class Settings {
     public static LinkedHashMap<String, Integer> directions = calculateDirections();
     public static float[] insidePercentageRange = {58, 60};
     public static float insidePercentage = calculateInsidePercentage(rand);
-    public static int removeAmount = (int) (cellCount * 0.6);
+    public static int removeAmount = (int) (cellCount * 0.5);
 
 
     private static long setRandomSeed(Integer seed) {
