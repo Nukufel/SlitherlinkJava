@@ -13,7 +13,7 @@ public class Grid {
 
 
     public Grid() {
-        new Settings(25,0.4, 1);
+        new Settings(10,0.4, 1);
 
         rand = Settings.rand;
         this.nodes = initializeNodes();

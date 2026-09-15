@@ -80,7 +80,6 @@ public class Solver {
 
             rollback(mark);
 
-            // We already know it's not unique
             if (solutionCount >= limit) {
                 return solutionCount;
             }
@@ -326,7 +325,6 @@ public class Solver {
     private boolean statePatterns(Cell clueCell) {
         ArrayList<Cell> localCells = new ArrayList<>(5);
 
-        // Index 0 is always the clue cell itself
         localCells.add(clueCell);
         localCells.addAll(getNeighbors(clueCell));
 
@@ -336,10 +334,8 @@ public class Solver {
 
         int validCount = 0;
 
-        // Bits that remain set here are TRUE in every valid combination
         int alwaysTrue = fullMask;
 
-        // Bits that remain set here are FALSE in every valid combination
         int alwaysFalse = fullMask;
 
         int clue = clueCell.getValue();
@@ -376,7 +372,6 @@ public class Solver {
 
             int edges = 0;
 
-            // Missing neighbors are exterior / OUTSIDE.
             if (centerInside) {
                 edges += 4 - neighborCount;
             }
@@ -400,7 +395,6 @@ public class Solver {
             alwaysFalse &= (~mask) & fullMask;
         }
 
-        // No possible local arrangement satisfies this clue
         if (validCount == 0) {
             contradiction = true;
             return false;
@@ -543,7 +537,6 @@ public class Solver {
         int guaranteedEdges = 0;
         int unknownSides = 0;
 
-        // Outside of board is OUTSIDE
         int exteriorSides = 4 - adjacentCells.size();
 
         if (assumedState == MyBoolean.TRUE) {
@@ -564,7 +557,7 @@ public class Solver {
         return clue >= guaranteedEdges && clue <= maxEdges;
     }
 
-    //PATTERNS -->
+    //PATTERNS
 
     public boolean zeroPatterns(Cell cell){
         boolean changed = false;
